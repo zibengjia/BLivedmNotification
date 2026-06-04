@@ -1,13 +1,13 @@
 {
-  "room_id": 510,
+  "room_id": 27484357,
   "display_index": 0,
   "pipe_name": "BlivedmOverlay",
   "sessdata": "dedecfa4%2C1791691681%2C15798%2A41CjCXfGWgjsKvLe8XA2vDYMHY4e2kvFBiKF5wchKCIoLA54sXFrxqxCkbK4y-RXKiDdoSVnk3eDE0dmpDdnprNmYyUzJSYVlvN01HSTZDdFBVbkFjVmd0b3M1Ti1YZGttRTBNeTItY01LS1lWRDVRYXhKcGlDcmMyMmszWnRiM25nT1ZEZDdDeGFRIIEC",
   "danmaku": {
-    "font_size": 28,
-    "speed": 300,
-    "opacity": 0.9,
-    "track_count": 12
+    "font_size": 21,
+    "speed": 280,
+    "opacity": 1,
+    "track_count": 14
   },
   "super_chat": {
     "font_size": 40,

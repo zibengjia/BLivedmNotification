@@ -7,7 +7,6 @@ public class DanmakuEngine
     private readonly List<DanmakuItem> _items = new();
     private readonly object _lock = new();
     private readonly Config _config;
-    private int _nextTrack;
     private long _lastFrameTicks;
 
     public int ActiveCount { get; private set; }
@@ -174,31 +173,74 @@ public class DanmakuEngine
 
     private void AssignTrack(DanmakuItem item)
     {
-        var trackHeight = (ScreenHeight - ScZoneHeight) / _config.Danmaku.TrackCount;
-        var track = _nextTrack % _config.Danmaku.TrackCount;
-        _nextTrack++;
+        // Tight track height = font size + small gap, not screen ÷ TrackCount
+        var trackHeight = _config.Danmaku.FontSize + 6f;
+        var maxTracks = Math.Min(
+            _config.Danmaku.TrackCount,
+            (int)((ScreenHeight - ScZoneHeight) / trackHeight)
+        );
+        if (maxTracks < 1) maxTracks = 1;
+        var entryWidth = item.TextWidth;
 
-        var occupiedTracks = new HashSet<int>();
-        foreach (var existing in _items)
+        // Scan tracks top→bottom (0=highest). Take first with enough free space.
+        for (int t = 0; t < maxTracks; t++)
         {
-            // Only regular danmaku compete for tracks
-            if (!existing.IsSC)
+            var trackTop = ScZoneHeight + t * trackHeight;
+            var trackBottom = trackTop + trackHeight;
+
+            // Find rightmost occupied pixel on this track
+            var rightmost = 0f;
+            foreach (var existing in _items)
             {
-                var t = (int)((existing.Y - ScZoneHeight) / trackHeight);
-                if (t >= 0 && t < _config.Danmaku.TrackCount)
-                    occupiedTracks.Add(t);
+                if (existing.IsSC) continue;
+                if (existing.Y >= trackTop && existing.Y < trackBottom)
+                {
+                    var rightEdge = existing.X + existing.TextWidth;
+                    if (rightEdge > rightmost)
+                        rightmost = rightEdge;
+                }
+            }
+
+            // Free space at right edge
+            var freePx = ScreenWidth - rightmost;
+
+            // Enough room for new danmaku + 20% buffer? Take it.
+            if (freePx >= entryWidth * 1.2f)
+            {
+                item.Track = t;
+                item.Y = ScZoneHeight + t * trackHeight;
+                return;
             }
         }
 
-        var attempts = 0;
-        while (occupiedTracks.Contains(track) && attempts < _config.Danmaku.TrackCount)
+        // All tracks blocked — pick the one with most free space (least worst)
+        var bestTrack = 0;
+        var bestFree = float.MinValue;
+        for (int t = 0; t < maxTracks; t++)
         {
-            track = (track + 1) % _config.Danmaku.TrackCount;
-            attempts++;
+            var trackTop = ScZoneHeight + t * trackHeight;
+            var trackBottom = trackTop + trackHeight;
+            var rightmost = 0f;
+            foreach (var existing in _items)
+            {
+                if (existing.IsSC) continue;
+                if (existing.Y >= trackTop && existing.Y < trackBottom)
+                {
+                    var rightEdge = existing.X + existing.TextWidth;
+                    if (rightEdge > rightmost)
+                        rightmost = rightEdge;
+                }
+            }
+            var freePx = ScreenWidth - rightmost;
+            if (freePx > bestFree)
+            {
+                bestFree = freePx;
+                bestTrack = t;
+            }
         }
 
-        item.Track = track;
-        item.Y = ScZoneHeight + track * trackHeight;
+        item.Track = bestTrack;
+        item.Y = ScZoneHeight + bestTrack * trackHeight;
     }
 
     private static string GetString(JsonElement el, string key)

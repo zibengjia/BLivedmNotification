@@ -72,6 +72,14 @@ public class OverlayForm : Form
         };
         _animTimer.Start();
 
+        // Escape closes overlay and returns to launcher
+        KeyPreview = true;
+        KeyDown += (_, e) =>
+        {
+            if (e.KeyCode == Keys.Escape)
+                Close();
+        };
+
         _initialized = true;
     }
 

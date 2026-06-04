@@ -1,5 +1,3 @@
-using Overlay;
-
 namespace Overlay;
 
 internal static class Program
@@ -8,8 +6,15 @@ internal static class Program
     private static void Main()
     {
         ApplicationConfiguration.Initialize();
-        var config = Config.Load();
-        var form = new OverlayForm(config);
-        Application.Run(form);
+
+        var args = Environment.GetCommandLineArgs();
+        if (args.Length > 1 && args[1] == "--overlay")
+        {
+            var config = Config.Load();
+            Application.Run(new OverlayForm(config));
+            return;
+        }
+
+        Application.Run(new MainForm());
     }
 }
