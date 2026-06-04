@@ -3,7 +3,7 @@ import logging
 from typing import *
 
 from .clients import ws_base
-from .models import web as web_models, open_live as open_models
+from .models import web as web_models
 
 __all__ = (
     'HandlerInterface',
@@ -74,12 +74,6 @@ class BaseHandler(HandlerInterface):
         message.is_mirror = True
         return self._on_danmaku(client, message)
 
-    def __open_dm_mirror_callback(self, client: ws_base.WebSocketClientBase, command: dict):
-        # 跨房弹幕可能缺少一些字段，详情参考官方文档
-        message = open_models.DanmakuMessage.from_command(command['data'])
-        message.is_mirror = True
-        return self._on_open_live_danmaku(client, message)
-
     _CMD_CALLBACK_DICT: Dict[
         str,
         Optional[Callable[
@@ -107,32 +101,6 @@ class BaseHandler(HandlerInterface):
         'SUPER_CHAT_MESSAGE_DELETE': _make_msg_callback('_on_super_chat_delete', web_models.SuperChatDeleteMessage),
         # 进入房间、关注主播等互动消息
         'INTERACT_WORD_V2': _make_msg_callback('_on_interact_word_v2', web_models.InteractWordV2Message),
-
-        #
-        # 开放平台消息
-        #
-
-        # 弹幕
-        'LIVE_OPEN_PLATFORM_DM': _make_msg_callback('_on_open_live_danmaku', open_models.DanmakuMessage),
-        'LIVE_OPEN_PLATFORM_DM_MIRROR': __open_dm_mirror_callback,
-        # 礼物
-        'LIVE_OPEN_PLATFORM_SEND_GIFT': _make_msg_callback('_on_open_live_gift', open_models.GiftMessage),
-        # 上舰
-        'LIVE_OPEN_PLATFORM_GUARD': _make_msg_callback('_on_open_live_buy_guard', open_models.GuardBuyMessage),
-        # 醒目留言
-        'LIVE_OPEN_PLATFORM_SUPER_CHAT': _make_msg_callback('_on_open_live_super_chat', open_models.SuperChatMessage),
-        # 删除醒目留言
-        'LIVE_OPEN_PLATFORM_SUPER_CHAT_DEL': _make_msg_callback(
-            '_on_open_live_super_chat_delete', open_models.SuperChatDeleteMessage
-        ),
-        # 点赞
-        'LIVE_OPEN_PLATFORM_LIKE': _make_msg_callback('_on_open_live_like', open_models.LikeMessage),
-        # 进入房间
-        'LIVE_OPEN_PLATFORM_LIVE_ROOM_ENTER': _make_msg_callback('_on_open_live_enter_room', open_models.RoomEnterMessage),
-        # 开始直播
-        'LIVE_OPEN_PLATFORM_LIVE_START': _make_msg_callback('_on_open_live_start_live', open_models.LiveStartMessage),
-        # 结束直播
-        'LIVE_OPEN_PLATFORM_LIVE_END': _make_msg_callback('_on_open_live_end_live', open_models.LiveEndMessage),
     }
 
     def handle(self, client: ws_base.WebSocketClientBase, command: dict):
@@ -175,36 +143,3 @@ class BaseHandler(HandlerInterface):
 
     def _on_interact_word_v2(self, client: ws_base.WebSocketClientBase, message: web_models.InteractWordV2Message):
         """进入房间、关注主播等互动消息"""
-
-    #
-    # 开放平台消息
-    #
-
-    def _on_open_live_danmaku(self, client: ws_base.WebSocketClientBase, message: open_models.DanmakuMessage):
-        """弹幕"""
-
-    def _on_open_live_gift(self, client: ws_base.WebSocketClientBase, message: open_models.GiftMessage):
-        """礼物"""
-
-    def _on_open_live_buy_guard(self, client: ws_base.WebSocketClientBase, message: open_models.GuardBuyMessage):
-        """上舰"""
-
-    def _on_open_live_super_chat(self, client: ws_base.WebSocketClientBase, message: open_models.SuperChatMessage):
-        """醒目留言"""
-
-    def _on_open_live_super_chat_delete(
-        self, client: ws_base.WebSocketClientBase, message: open_models.SuperChatDeleteMessage
-    ):
-        """删除醒目留言"""
-
-    def _on_open_live_like(self, client: ws_base.WebSocketClientBase, message: open_models.LikeMessage):
-        """点赞"""
-
-    def _on_open_live_enter_room(self, client: ws_base.WebSocketClientBase, message: open_models.RoomEnterMessage):
-        """进入房间"""
-
-    def _on_open_live_start_live(self, client: ws_base.WebSocketClientBase, message: open_models.LiveStartMessage):
-        """开始直播"""
-
-    def _on_open_live_end_live(self, client: ws_base.WebSocketClientBase, message: open_models.LiveEndMessage):
-        """结束直播"""

@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/BLivedmNotification.iml" filepath="$PROJECT_DIR$/.idea/BLivedmNotification.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/blivedm.iml" filepath="$PROJECT_DIR$/.idea/blivedm.iml" />
     </modules>
   </component>
 </project>

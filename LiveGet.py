@@ -3,9 +3,7 @@ import asyncio
 import http.cookies
 import random
 from typing import *
-
 import aiohttp
-
 import blivedm
 import blivedm.models.web as web_models
 
@@ -28,7 +26,6 @@ async def main():
     init_session()
     try:
         await run_single_client()
-        await run_multi_clients()
     finally:
         await session.close()
 
@@ -54,33 +51,11 @@ async def run_single_client():
 
     client.start()
     try:
-        # 演示5秒后停止
-        await asyncio.sleep(5)
-        client.stop()
-
         await client.join()
     finally:
         await client.stop_and_close()
 
 
-async def run_multi_clients():
-    """
-    同时监听多个直播间
-    """
-    clients = [blivedm.BLiveClient(room_id, session=session) for room_id in TEST_ROOM_IDS]
-    handler = MyHandler()
-    for client in clients:
-        client.set_handler(handler)
-        client.start()
-
-    try:
-        await asyncio.gather(*(
-            client.join() for client in clients
-        ))
-    finally:
-        await asyncio.gather(*(
-            client.stop_and_close() for client in clients
-        ))
 
 
 class MyHandler(blivedm.BaseHandler):
@@ -100,7 +75,7 @@ class MyHandler(blivedm.BaseHandler):
 
     def _on_gift(self, client: blivedm.BLiveClient, message: web_models.GiftMessage):
         print(f'[{client.room_id}] {message.uname} 赠送{message.gift_name}x{message.num}'
-              f' （{message.coin_type}瓜子x{message.total_coin}）')
+              f'({message.price/10})电池')
 
     # def _on_buy_guard(self, client: blivedm.BLiveClient, message: web_models.GuardBuyMessage):
     #     print(f'[{client.room_id}] {message.username} 上舰，guard_level={message.guard_level}')
