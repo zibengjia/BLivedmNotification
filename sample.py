@@ -45,7 +45,7 @@ def init_session():
 
 async def run_single_client():
     """
-    演示监听一个直播间
+    监听一个直播间
     """
     room_id = random.choice(TEST_ROOM_IDS)
     client = blivedm.BLiveClient(room_id, session=session)
@@ -65,7 +65,7 @@ async def run_single_client():
 
 async def run_multi_clients():
     """
-    演示同时监听多个直播间
+    同时监听多个直播间
     """
     clients = [blivedm.BLiveClient(room_id, session=session) for room_id in TEST_ROOM_IDS]
     handler = MyHandler()
