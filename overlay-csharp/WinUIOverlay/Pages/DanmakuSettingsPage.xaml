@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Page
+    x:Class="Overlay.Pages.DanmakuSettingsPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
+
+    <ScrollViewer AutomationProperties.AutomationId="DanmakuSettingsPage">
+        <StackPanel Padding="24,16" Spacing="0">
+
+            <!-- Page header -->
+            <TextBlock Text="弹幕设置"
+                Style="{StaticResource TitleTextBlockStyle}"
+                AutomationProperties.AutomationId="PageTitle" />
+
+            <!-- ─── 弹幕参数 ─── -->
+            <TextBlock Text="弹幕参数"
+                Style="{StaticResource SubtitleTextBlockStyle}"
+                Margin="0,24,0,0" />
+
+            <Grid Margin="0,16,0,0" RowSpacing="12">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+
+                <!-- Font Size -->
+                <Grid Grid.Row="0" ColumnDefinitions="120,*">
+                    <TextBlock Text="字号"
+                        VerticalAlignment="Center"
+                        Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                    <NumberBox x:Name="NudDmFontSize" Grid.Column="1"
+                        Minimum="12" Maximum="120"
+                        SpinButtonPlacementMode="Inline"
+                        SmallChange="1" LargeChange="10"
+                        ValidationMode="InvalidInputOverwritten"
+                        Value="28"
+                        AutomationProperties.AutomationId="NudDmFontSize"
+                        AutomationProperties.Name="弹幕字号" />
+                </Grid>
+
+                <!-- Speed -->
+                <Grid Grid.Row="1" ColumnDefinitions="120,*">
+                    <TextBlock Text="速度 (px/s)"
+                        VerticalAlignment="Center"
+                        Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                    <NumberBox x:Name="NudDmSpeed" Grid.Column="1"
+                        Minimum="50" Maximum="2000"
+                        SpinButtonPlacementMode="Inline"
+                        SmallChange="10" LargeChange="100"
+                        ValidationMode="InvalidInputOverwritten"
+                        Value="300"
+                        AutomationProperties.AutomationId="NudDmSpeed"
+                        AutomationProperties.Name="弹幕滚动速度" />
+                </Grid>
+
+                <!-- Opacity -->
+                <Grid Grid.Row="2" ColumnDefinitions="120,*,Auto">
+                    <TextBlock Text="不透明度"
+                        VerticalAlignment="Center"
+                        Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                    <Slider x:Name="SlDmOpacity" Grid.Column="1"
+                        Minimum="0" Maximum="100"
+                        StepFrequency="5"
+                        SmallChange="5" LargeChange="10"
+                        Value="90"
+                        AutomationProperties.AutomationId="SlDmOpacity"
+                        AutomationProperties.Name="弹幕不透明度" />
+                    <TextBlock x:Name="LblDmOpacityVal" Grid.Column="2"
+                        Text="90%"
+                        Width="44" TextAlignment="Center"
+                        VerticalAlignment="Center"
+                        Margin="8,0,0,0"
+                        Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                </Grid>
+
+                <!-- Track Count -->
+                <Grid Grid.Row="3" ColumnDefinitions="120,*">
+                    <TextBlock Text="轨道数"
+                        VerticalAlignment="Center"
+                        Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                    <NumberBox x:Name="NudDmTrackCount" Grid.Column="1"
+                        Minimum="1" Maximum="50"
+                        SpinButtonPlacementMode="Inline"
+                        SmallChange="1" LargeChange="5"
+                        ValidationMode="InvalidInputOverwritten"
+                        Value="12"
+                        AutomationProperties.AutomationId="NudDmTrackCount"
+                        AutomationProperties.Name="弹幕轨道数" />
+                </Grid>
+            </Grid>
+        </StackPanel>
+    </ScrollViewer>
+</Page>

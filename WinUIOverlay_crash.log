@@ -1,0 +1,13 @@
+UI: System.Runtime.InteropServices.COMException (0x8007139F): 组或资源的状态不是执行请求操作的正确状态。
+
+组或资源的状态不是执行请求操作的正确状态。
+
+   at WinRT.ExceptionHelpers.<ThrowExceptionForHR>g__Throw|38_0(Int32 hr)
+   at WinRT.ExceptionHelpers.ThrowExceptionForHR(Int32 hr)
+   at ABI.Microsoft.UI.Windowing.IAppWindowTitleBar2Methods.set_PreferredHeightOption(IObjectReference _obj, TitleBarHeightOption value)
+   at Microsoft.UI.Windowing.AppWindowTitleBar.set_PreferredHeightOption(TitleBarHeightOption value)
+   at Overlay.MainWindow..ctor() in C:\Users\zibj\Desktop\Project\Claude\BLivedmNotification\overlay-csharp\WinUIOverlay\MainWindow.xaml.cs:line 64
+   at Overlay.App.OnLaunched(LaunchActivatedEventArgs args) in C:\Users\zibj\Desktop\Project\Claude\BLivedmNotification\overlay-csharp\WinUIOverlay\App.xaml.cs:line 36
+   at Microsoft.UI.Xaml.Application.Microsoft.UI.Xaml.IApplicationOverrides.OnLaunched(LaunchActivatedEventArgs args)
+   at ABI.Microsoft.UI.Xaml.IApplicationOverrides.Do_Abi_OnLaunched_0(IntPtr thisPtr, IntPtr args)
+False

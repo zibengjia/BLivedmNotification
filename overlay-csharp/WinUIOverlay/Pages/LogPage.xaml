@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Page
+    x:Class="Overlay.Pages.LogPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <Grid RowDefinitions="*,Auto">
+
+        <!-- Log output -->
+        <ScrollViewer x:Name="LogScroll" Margin="16,8">
+            <TextBox x:Name="LogContent"
+                IsReadOnly="True"
+                TextWrapping="Wrap"
+                AcceptsReturn="True"
+                FontFamily="Consolas"
+                FontSize="12"
+                Background="Transparent"
+                BorderThickness="0"
+                AutomationProperties.AutomationId="LogContent" />
+        </ScrollViewer>
+
+        <!-- Bottom bar -->
+        <Grid Grid.Row="1" Padding="16,8,16,12"
+              ColumnDefinitions="*,Auto">
+            <TextBlock x:Name="LineCount"
+                Text="行数: 0"
+                VerticalAlignment="Center"
+                Style="{ThemeResource CaptionTextBlockStyle}"
+                Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+            <Button Grid.Column="1" Content="清空" Click="OnClear"
+                AutomationProperties.AutomationId="BtnClearLog" />
+        </Grid>
+    </Grid>
+</Page>

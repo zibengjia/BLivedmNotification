@@ -126,7 +126,7 @@ public class MainForm : Form
 
         int y = 24;
         CreateLabel(gb, "房间号 (Room ID):", 14, y);
-        _nudRoomId = CreateNud(gb, 160, y - 1, 1, 999999999, 510, 150);
+        _nudRoomId = CreateNud(gb, 160, y - 1, 1, 99999999999, 510, 150);
 
         y += 32;
         CreateLabel(gb, "管道名称:", 14, y);
@@ -374,7 +374,7 @@ public class MainForm : Form
 
     private void LoadConfigToUI()
     {
-        _nudRoomId.Value = Math.Clamp(_config.RoomId, 1, 999999999);
+        _nudRoomId.Value = Math.Clamp(_config.RoomId, 1, 99999999999);
 
         _txtPipeName.Text = _config.PipeName;
         _txtSessdata.Text = _config.Sessdata ?? "";

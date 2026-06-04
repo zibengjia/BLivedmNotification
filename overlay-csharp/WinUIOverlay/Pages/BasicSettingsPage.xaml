@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Page
+    x:Class="Overlay.Pages.BasicSettingsPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
+
+    <ScrollViewer AutomationProperties.AutomationId="BasicSettingsPage">
+        <StackPanel Padding="24,16" Spacing="0">
+            <!-- Page header -->
+            <TextBlock Text="基本设置"
+                Style="{StaticResource TitleTextBlockStyle}"
+                AutomationProperties.AutomationId="PageTitle" />
+
+            <!-- ─── 连接设置 ─── -->
+            <TextBlock Text="连接设置"
+                Style="{StaticResource SubtitleTextBlockStyle}"
+                Margin="0,24,0,0" />
+
+            <Grid Margin="0,12,0,0" RowSpacing="8">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+
+                <!-- Room ID -->
+                <Grid Grid.Row="0" ColumnDefinitions="120,*">
+                    <TextBlock Text="房间号"
+                        VerticalAlignment="Center"
+                        Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                    <NumberBox x:Name="NudRoomId" Grid.Column="1"
+                        Minimum="1" Maximum="99999999999"
+                        SpinButtonPlacementMode="Inline"
+                        SmallChange="1" LargeChange="100"
+                        ValidationMode="InvalidInputOverwritten"
+                        Value="510"
+                        AutomationProperties.AutomationId="NudRoomId"
+                        AutomationProperties.Name="房间号" />
+                </Grid>
+
+                <!-- Pipe Name -->
+                <Grid Grid.Row="1" ColumnDefinitions="120,*">
+                    <TextBlock Text="管道名称"
+                        VerticalAlignment="Center"
+                        Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                    <TextBox x:Name="TxtPipeName" Grid.Column="1"
+                        Text="BlivedmOverlay"
+                        PlaceholderText="Named Pipe 名称"
+                        AutomationProperties.AutomationId="TxtPipeName"
+                        AutomationProperties.Name="管道名称" />
+                </Grid>
+            </Grid>
+
+            <!-- ─── 身份验证 ─── -->
+            <TextBlock Text="身份验证"
+                Style="{StaticResource SubtitleTextBlockStyle}"
+                Margin="0,24,0,0" />
+
+            <Grid Margin="0,12,0,0" RowSpacing="4">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+
+                <!-- SESSDATA -->
+                <Grid Grid.Row="0" ColumnDefinitions="120,*">
+                    <TextBlock Text="SESSDATA"
+                        VerticalAlignment="Center"
+                        Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                    <PasswordBox x:Name="TxtSessdata" Grid.Column="1"
+                        PasswordRevealMode="Peek"
+                        PlaceholderText="留空则匿名连接"
+                        AutomationProperties.AutomationId="TxtSessdata"
+                        AutomationProperties.Name="SESSDATA Cookie" />
+                </Grid>
+
+                <!-- InfoBar -->
+                <InfoBar Grid.Row="1"
+                    x:Name="SessdataInfo"
+                    IsOpen="True"
+                    Severity="Informational"
+                    Message="SESSDATA 可选。提供后可显示完整用户名，否则 B 站会匿名显示。"
+                    IsClosable="False"
+                    Margin="0,4,0,0"
+                    AutomationProperties.AutomationId="SessdataInfo" />
+            </Grid>
+
+            <!-- ─── 显示设置 ─── -->
+            <TextBlock Text="显示设置"
+                Style="{StaticResource SubtitleTextBlockStyle}"
+                Margin="0,24,0,0" />
+
+            <Grid Margin="0,12,0,0" RowSpacing="8">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+
+                <!-- Display -->
+                <Grid Grid.Row="0" ColumnDefinitions="120,*">
+                    <TextBlock Text="显示器"
+                        VerticalAlignment="Center"
+                        Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                    <ComboBox x:Name="CboDisplay" Grid.Column="1"
+                        PlaceholderText="选择显示器"
+                        AutomationProperties.AutomationId="CboDisplay"
+                        AutomationProperties.Name="目标显示器" />
+                </Grid>
+            </Grid>
+
+            <!-- ─── 高级设置 ─── -->
+            <TextBlock Text="高级设置"
+                Style="{StaticResource SubtitleTextBlockStyle}"
+                Margin="0,24,0,0" />
+
+            <Grid Margin="0,12,0,0" RowSpacing="8">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+
+                <!-- Python command -->
+                <Grid Grid.Row="0" ColumnDefinitions="120,*">
+                    <TextBlock Text="Python 命令"
+                        VerticalAlignment="Center"
+                        Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                    <TextBox x:Name="TxtPythonCmd" Grid.Column="1"
+                        Text="python"
+                        PlaceholderText="python 解释器路径或命令"
+                        AutomationProperties.AutomationId="TxtPythonCmd"
+                        AutomationProperties.Name="Python 命令" />
+                </Grid>
+            </Grid>
+        </StackPanel>
+    </ScrollViewer>
+</Page>
