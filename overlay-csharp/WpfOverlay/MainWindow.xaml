@@ -1,0 +1,160 @@
+<Window x:Class="Overlay.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="BLivedm Notification"
+        MinWidth="680" MinHeight="520"
+        Width="720" Height="600"
+        WindowStartupLocation="CenterScreen"
+        Closing="OnClosing">
+    <Grid Margin="8">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="140" />
+        </Grid.RowDefinitions>
+
+        <!-- ══════════ Tab Control (config) ══════════ -->
+        <TabControl Grid.Row="0">
+            <!-- ── Tab 1: 基本设置 ── -->
+            <TabItem Header="基本设置">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel Margin="8">
+                        <!-- Room ID -->
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                            <TextBlock Text="房间 ID：" Width="100" VerticalAlignment="Center" />
+                            <TextBox x:Name="RoomIdBox" Width="200" />
+                        </StackPanel>
+
+                        <!-- Pipe Name -->
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                            <TextBlock Text="Pipe 名称：" Width="100" VerticalAlignment="Center" />
+                            <TextBox x:Name="PipeNameBox" Text="BlivedmOverlay" Width="200" />
+                        </StackPanel>
+
+                        <!-- SESSDATA -->
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                            <TextBlock Text="SESSDATA：" Width="100" VerticalAlignment="Center" />
+                            <PasswordBox x:Name="SessdataBox" Width="200" />
+                            <CheckBox x:Name="ShowSessdataCheck" Content="显示" Margin="4,0,0,0"
+                                      VerticalAlignment="Center"
+                                      Checked="OnShowSessdata" Unchecked="OnShowSessdata" />
+                        </StackPanel>
+
+                        <!-- Display -->
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                            <TextBlock Text="显示器：" Width="100" VerticalAlignment="Center" />
+                            <ComboBox x:Name="DisplayCombo" Width="280" />
+                        </StackPanel>
+
+                        <!-- Python Path -->
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                            <TextBlock Text="Python 路径：" Width="100" VerticalAlignment="Center" />
+                            <TextBox x:Name="PythonPathBox" Text="python" Width="200" />
+                            <Button Content="浏览" Click="OnBrowsePython" Padding="8,2" Margin="4,0,0,0" />
+                        </StackPanel>
+
+                        <!-- Hint -->
+                        <TextBlock Text="提示：留空使用系统 PATH 中的 python。修改后需点击「保存配置」。"
+                                   Foreground="{x:Static SystemColors.GrayTextBrush}"
+                                   FontSize="11" Margin="0,8,0,0" />
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+
+            <!-- ── Tab 2: 弹幕设置 ── -->
+            <TabItem Header="弹幕设置">
+                <StackPanel Margin="12" Orientation="Vertical">
+                    <TextBlock x:Name="FontSizeLabel" Text="字号：21" />
+                    <Slider x:Name="FontSizeSlider" Minimum="12" Maximum="48" TickFrequency="1"
+                            ValueChanged="OnDanmakuPreviewChanged" Margin="0,0,0,12" />
+
+                    <TextBlock x:Name="SpeedLabel" Text="速度：280 px/s" />
+                    <Slider x:Name="SpeedSlider" Minimum="50" Maximum="500" TickFrequency="10"
+                            ValueChanged="OnDanmakuPreviewChanged" Margin="0,0,0,12" />
+
+                    <TextBlock x:Name="OpacityLabel" Text="透明度：1.00" />
+                    <Slider x:Name="OpacitySlider" Minimum="0.1" Maximum="1.0" TickFrequency="0.05"
+                            ValueChanged="OnDanmakuPreviewChanged" Margin="0,0,0,12" />
+
+                    <TextBlock x:Name="TrackCountLabel" Text="轨道数：14" />
+                    <Slider x:Name="TrackCountSlider" Minimum="4" Maximum="24" TickFrequency="1"
+                            ValueChanged="OnDanmakuPreviewChanged" />
+                </StackPanel>
+            </TabItem>
+
+            <!-- ── Tab 3: 醒目留言 ── -->
+            <TabItem Header="醒目留言">
+                <StackPanel Margin="12" Orientation="Vertical">
+                    <TextBlock x:Name="ScFontSizeLabel" Text="字号：40" />
+                    <Slider x:Name="ScFontSizeSlider" Minimum="24" Maximum="72" TickFrequency="2"
+                            Margin="0,0,0,12" />
+
+                    <TextBlock x:Name="ScDurationLabel" Text="持续时间：15000 ms" />
+                    <Slider x:Name="ScDurationSlider" Minimum="5000" Maximum="30000" TickFrequency="500" />
+                </StackPanel>
+            </TabItem>
+
+            <!-- ── Tab 4: 关于 ── -->
+            <TabItem Header="关于">
+                <StackPanel Margin="16" VerticalAlignment="Center" HorizontalAlignment="Center">
+                    <TextBlock Text="BLivedm Notification" FontSize="18" FontWeight="SemiBold"
+                               HorizontalAlignment="Center" />
+                    <TextBlock Text="B站直播间弹幕叠加层" FontSize="13"
+                               HorizontalAlignment="Center" Margin="0,4,0,0" />
+                    <Separator Margin="0,12" />
+                    <TextBlock Text="Python 后端 + C# WPF 前端" HorizontalAlignment="Center" />
+                    <TextBlock Text="双进程架构 · Named Pipe IPC · DrawingVisual 渲染"
+                               HorizontalAlignment="Center" Margin="0,4,0,0" />
+                    <Separator Margin="0,12" />
+                    <TextBlock Text="WPF Overlay (替代 WinUI)" FontSize="12"
+                               Foreground="{x:Static SystemColors.GrayTextBrush}" HorizontalAlignment="Center" />
+                </StackPanel>
+            </TabItem>
+        </TabControl>
+
+        <!-- ══════════ Status Bar ══════════ -->
+        <Border Grid.Row="1" Background="{x:Static SystemColors.ControlLightBrush}"
+                BorderBrush="{x:Static SystemColors.ControlDarkBrush}"
+                BorderThickness="0,1,0,0" Padding="8,6">
+            <StackPanel Orientation="Horizontal">
+                <TextBlock x:Name="BackendStatus" FontSize="14" VerticalAlignment="Center">○ 后端</TextBlock>
+                <Button x:Name="StartBackendBtn" Content="启动后端" Click="OnStartBackend" Margin="4,0" Padding="8,2" />
+                <Button x:Name="StopBackendBtn" Content="停止后端" Click="OnStopBackend" Margin="0,0,12,0" Padding="8,2" IsEnabled="False" />
+
+                <TextBlock x:Name="OverlayStatus" FontSize="14" VerticalAlignment="Center">○ 覆盖层</TextBlock>
+                <Button x:Name="ShowOverlayBtn" Content="显示覆盖层" Click="OnShowOverlay" Margin="4,0" Padding="8,2" />
+                <Button x:Name="HideOverlayBtn" Content="隐藏覆盖层" Click="OnHideOverlay" Margin="0,0,12,0" Padding="8,2" IsEnabled="False" />
+
+                <Button x:Name="StartAllBtn" Content="全部启动" Click="OnStartAll" Margin="4,0" Padding="12,2" FontWeight="SemiBold" />
+                <Button x:Name="StopAllBtn" Content="全部停止" Click="OnStopAll" Padding="12,2" IsEnabled="False"
+                        Foreground="White" Background="#D32F2F" />
+            </StackPanel>
+        </Border>
+
+        <!-- ══════════ Log Area ══════════ -->
+        <Border Grid.Row="2" BorderBrush="{x:Static SystemColors.ControlDarkBrush}"
+                BorderThickness="0,1,0,0" Padding="4,4,4,0">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+
+                <Grid Grid.Row="0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Text="日志" FontSize="12" Foreground="{x:Static SystemColors.GrayTextBrush}" />
+                    <Button Grid.Column="1" Content="清除" Click="OnClearLog" Padding="8,0" FontSize="11" />
+                </Grid>
+
+                <TextBox x:Name="LogBox" Grid.Row="1"
+                         IsReadOnly="True" FontFamily="Consolas" FontSize="11"
+                         Background="#1E1E1E" Foreground="#D4D4D4"
+                         VerticalScrollBarVisibility="Auto"
+                         TextWrapping="NoWrap" AcceptsReturn="True" />
+            </Grid>
+        </Border>
+    </Grid>
+</Window>

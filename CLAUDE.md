@@ -14,11 +14,17 @@ cd overlay-csharp && dotnet run --project Overlay
 # C# WinForms overlay — Run overlay-only mode (skip launcher, for debugging)
 cd overlay-csharp && dotnet run --project Overlay -- --overlay
 
-# C# WinUI 3 overlay — Build (WIP, replaces WinForms version)
-cd overlay-csharp/WinUIOverlay && dotnet build
+# C# WPF overlay — Build (new, replaces WinUI 3)
+cd overlay-csharp/WpfOverlay && dotnet build
 
-# C# WinUI 3 overlay — Run (WIP)
-cd overlay-csharp/WinUIOverlay && dotnet run
+# C# WPF overlay — Run (with launcher)
+cd overlay-csharp/WpfOverlay && dotnet run
+
+# C# WPF overlay — Run overlay-only mode (no launcher, for debugging)
+cd overlay-csharp/WpfOverlay && dotnet run -- --overlay
+
+# C# WinUI 3 overlay — Build (WIP, abandoned due to transparency issue)
+cd overlay-csharp/WinUIOverlay && dotnet build
 
 # Python — Setup (PDM or uv)
 pdm install          # PDM
@@ -79,17 +85,29 @@ BLivedmNotification/
 │   └── config.py                # Loads config.json with defaults
 ├── uv.lock                      # uv lockfile (if using uv instead of pdm)
 │
-├── overlay-csharp/              # C# WinForms + Direct2D overlay
-│   └── Overlay/
-│       ├── Program.cs           # Entry: MainForm, or --overlay flag for direct overlay
-│       ├── MainForm.cs          # Launcher: tabbed settings + start/stop buttons + tray
-│       ├── OverlayForm.cs       # Transparent fullscreen overlay window (Escape to close)
-│       ├── Config.cs            # Config POCO: Load/Save JSON, snake_case via JsonPropertyName
-│       ├── DanmakuEngine.cs     # Track assignment, collision detection, animation update
-│       ├── DanmakuRenderer.cs   # Direct2D/DirectWrite rendering (Vortice)
-│       ├── DanmakuItem.cs       # Danmaku/SC display state
-│       ├── PipeClient.cs        # Named Pipe consumer (reconnect on disconnect)
-│       └── Overlay.csproj       # net8.0-windows, WinForms, Vortice.Direct2D1
+├── overlay-csharp/              # C# overlays (WinForms stable + WPF new)
+│   ├── Overlay/                 # WinForms version (stable, Vortice.Direct2D1)
+│   │   ├── Program.cs           # Entry: MainForm, or --overlay flag for direct overlay
+│   │   ├── MainForm.cs          # Launcher: tabbed settings + start/stop buttons + tray
+│   │   ├── OverlayForm.cs       # Transparent fullscreen overlay window (Escape to close)
+│   │   ├── Config.cs            # Config POCO: Load/Save JSON, snake_case via JsonPropertyName
+│   │   ├── DanmakuEngine.cs     # Track assignment, collision detection, animation update
+│   │   ├── DanmakuRenderer.cs   # Direct2D/DirectWrite rendering (Vortice)
+│   │   ├── DanmakuItem.cs       # Danmaku/SC display state
+│   │   ├── PipeClient.cs        # Named Pipe consumer (reconnect on disconnect)
+│   │   └── Overlay.csproj       # net8.0-windows, WinForms, Vortice.Direct2D1
+│   │
+│   └── WpfOverlay/              # WPF overlay (replaces WinUI 3)
+│       ├── WpfOverlay.csproj    # net8.0-windows, UseWPF, UseWindowsForms (NotifyIcon)
+│       ├── App.xaml / .cs       # Entry: --overlay → OverlayWindow, else → MainWindow
+│       ├── Config.cs            # Config POCO (same schema, +PythonPath)
+│       ├── DanmakuEngine.cs     # Track assignment, collision detection (shared)
+│       ├── DanmakuItem.cs       # Danmaku/SC display state (shared)
+│       ├── PipeClient.cs        # Named Pipe consumer (shared)
+│       ├── ProcessManager.cs    # Python backend process lifecycle
+│       ├── MainWindow.xaml/.cs  # Launcher: TabControl, status bar, log, NotifyIcon tray
+│       ├── OverlayWindow.xaml/.cs # Transparent overlay via AllowsTransparency
+│       └── DanmakuRenderer.cs   # DrawingVisual + VisualCollection, FormattedText
 │
 ├── overlay-csharp/WinUIOverlay/ # WinUI 3 overlay (WIP, replaces WinForms)
 │   ├── App.xaml{.cs}            # Entry: MainWindow or --overlay → OverlayWindow

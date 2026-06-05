@@ -55,8 +55,10 @@ async def pipe_server(config: dict) -> PipeWriter:
     pipe = win32pipe.CreateNamedPipe(
         pipe_path,
         win32pipe.PIPE_ACCESS_DUPLEX,
-        win32pipe.PIPE_TYPE_MESSAGE
-        | win32pipe.PIPE_READMODE_MESSAGE
+        # Byte mode — C# NamedPipeClientStream doesn't support message mode.
+        # The \n-delimited JSON line framing is handled at the application level.
+        win32pipe.PIPE_TYPE_BYTE
+        | win32pipe.PIPE_READMODE_BYTE
         | win32pipe.PIPE_WAIT,
         win32pipe.PIPE_UNLIMITED_INSTANCES,
         PIPE_BUFFER_SIZE,
@@ -71,10 +73,11 @@ async def pipe_server(config: dict) -> PipeWriter:
 
     logger.info("C# overlay connected!")
 
-    # Set pipe to non-blocking mode
-    win32pipe.SetNamedPipeHandleState(
-        pipe, win32pipe.PIPE_NOWAIT, None, None
-    )
+    # Note: intentionally NOT setting PIPE_NOWAIT here.
+    # PIPE_NOWAIT causes WriteFile to fail with ERROR_NO_DATA if the C# client's
+    # read loop hasn't started yet (race condition on connect).
+    # Default PIPE_WAIT mode ensures writes succeed — the pipe buffer is 64KB
+    # and messages are small (JSON lines), so there's no blocking concern.
 
     return PipeWriter(pipe)
 

@@ -1,0 +1,16 @@
+<Window x:Class="Overlay.OverlayWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Overlay"
+        WindowStyle="None"
+        AllowsTransparency="True"
+        Background="Transparent"
+        Topmost="True"
+        ShowInTaskbar="False"
+        IsHitTestVisible="False"
+        ResizeMode="NoResize"
+        WindowStartupLocation="Manual"
+        Width="{x:Static SystemParameters.PrimaryScreenWidth}"
+        Height="{x:Static SystemParameters.PrimaryScreenHeight}">
+    <Canvas x:Name="DanmakuCanvas" Background="Transparent" />
+</Window>
