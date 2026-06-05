@@ -5,10 +5,16 @@
   "sessdata": "dedecfa4%2C1791691681%2C15798%2A41CjCXfGWgjsKvLe8XA2vDYMHY4e2kvFBiKF5wchKCIoLA54sXFrxqxCkbK4y-RXKiDdoSVnk3eDE0dmpDdnprNmYyUzJSYVlvN01HSTZDdFBVbkFjVmd0b3M1Ti1YZGttRTBNeTItY01LS1lWRDVRYXhKcGlDcmMyMmszWnRiM25nT1ZEZDdDeGFRIIEC",
   "python_path": "",
   "danmaku": {
-    "font_size": 21,
-    "speed": 200,
-    "opacity": 0.75,
-    "track_count": 14
+    "font_size": 24,
+    "speed": 150,
+    "opacity": 0.6,
+    "track_count": 15,
+    "font_weight": "Medium",
+    "shadow_enabled": true,
+    "shadow_opacity": 1,
+    "shadow_offset": 2,
+    "position_priority": "Top",
+    "density": "Medium"
   },
   "super_chat": {
     "font_size": 40,

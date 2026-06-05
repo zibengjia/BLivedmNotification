@@ -44,6 +44,24 @@ public class Config
 
         [JsonPropertyName("track_count")]
         public int TrackCount { get; set; } = 12;
+
+        [JsonPropertyName("font_weight")]
+        public string FontWeight { get; set; } = "Normal";
+
+        [JsonPropertyName("shadow_enabled")]
+        public bool ShadowEnabled { get; set; } = true;
+
+        [JsonPropertyName("shadow_opacity")]
+        public float ShadowOpacity { get; set; } = 0.6f;
+
+        [JsonPropertyName("shadow_offset")]
+        public float ShadowOffset { get; set; } = 2.0f;
+
+        [JsonPropertyName("position_priority")]
+        public string PositionPriority { get; set; } = "Top";
+
+        [JsonPropertyName("density")]
+        public string Density { get; set; } = "Medium";
     }
 
     public class SuperChatConfig

@@ -62,10 +62,11 @@ public class ProcessManager : IDisposable
             };
             _pythonProcess.Exited += (_, _) =>
             {
-                LogMessage?.Invoke("后端进程已退出。");
-                _pythonProcess?.Dispose();
-                _pythonProcess = null;
-                StatusChanged?.Invoke(false);
+                if (Interlocked.Exchange(ref _pythonProcess, null) is { } oldProc)
+                {
+                    oldProc.Dispose();
+                    StatusChanged?.Invoke(false);
+                }
             };
 
             _pythonProcess.Start();
@@ -85,23 +86,24 @@ public class ProcessManager : IDisposable
 
     public void Stop()
     {
-        if (_pythonProcess is { HasExited: false })
+        var proc = _pythonProcess;
+        if (proc is { HasExited: false })
         {
             try
             {
-                _pythonProcess.Kill(entireProcessTree: true);
-                // Don't WaitForExit — that blocks the UI thread.
-                // The Exited handler will clean up and fire StatusChanged(false).
+                LogMessage?.Invoke($"正在停止后端 (PID: {proc.Id}) ...");
+                proc.Kill(entireProcessTree: true);
             }
             catch (Exception ex)
             {
                 LogMessage?.Invoke($"[ERR] 停止后端失败: {ex.Message}");
             }
         }
-        else
-        {
-            StatusChanged?.Invoke(false);
-        }
+
+        // Immediately clean up and notify UI — don't wait for Exited event
+        proc?.Dispose();
+        _pythonProcess = null;
+        StatusChanged?.Invoke(false);
     }
 
     /// <summary>

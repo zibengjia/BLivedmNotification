@@ -1,6 +1,12 @@
 using System.Globalization;
 using System.Windows;
 using System.Windows.Media;
+using Color = System.Windows.Media.Color;
+using Brush = System.Windows.Media.Brush;
+using Brushes = System.Windows.Media.Brushes;
+using Point = System.Windows.Point;
+using FontFamily = System.Windows.Media.FontFamily;
+using Application = System.Windows.Application;
 
 namespace Overlay;
 
@@ -15,15 +21,16 @@ public class DanmakuRenderer : FrameworkElement
     private readonly Dictionary<DanmakuItem, DrawingVisual> _itemMap = new();
     private readonly Queue<DrawingVisual> _pool = new();
     private readonly Config _config;
+    private readonly FontWeight _fontWeight;
 
-    private static readonly System.Windows.Media.Color ShadowColor = System.Windows.Media.Color.FromArgb(255, 0, 0, 0);
-    private const double ShadowOffset = 2.0;
+    private static readonly Color DefaultShadowColor = Color.FromArgb(255, 0, 0, 0);
     private const double ScBackgroundAlpha = 0.3;
 
     public DanmakuRenderer(Config config)
     {
         _config = config;
         _visuals = new VisualCollection(this);
+        _fontWeight = ParseFontWeight(config.Danmaku.FontWeight);
     }
 
     protected override int VisualChildrenCount => _visuals.Count;
@@ -83,7 +90,7 @@ public class DanmakuRenderer : FrameworkElement
     /// </summary>
     public float MeasureText(string text, double fontSize)
     {
-        var ft = BuildFormattedText(text, fontSize, System.Windows.Media.Brushes.White);
+        var ft = BuildFormattedText(text, fontSize, Brushes.White);
         return (float)ft.Width;
     }
 
@@ -110,27 +117,32 @@ public class DanmakuRenderer : FrameworkElement
         var opacity = item.Opacity;
         var textColor = ColorFromInt(item.Color, opacity);
 
-        var foregroundBrush = new System.Windows.Media.SolidColorBrush(textColor);
+        var foregroundBrush = new SolidColorBrush(textColor);
         foregroundBrush.Freeze();
 
         var ft = BuildFormattedText(item.Text, fontSize, foregroundBrush);
 
-        // Shadow
-        var shadowAlpha = (byte)(opacity * 0.6 * 255);
-        var shadowBrush = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromArgb(shadowAlpha, 0, 0, 0));
-        shadowBrush.Freeze();
+        // Shadow rendering (configurable)
+        var danmakuConfig = _config.Danmaku;
+        if (danmakuConfig.ShadowEnabled)
+        {
+            var shadowAlpha = (byte)(opacity * danmakuConfig.ShadowOpacity * 255);
+            var shadowBrush = new SolidColorBrush(Color.FromArgb(shadowAlpha, 0, 0, 0));
+            shadowBrush.Freeze();
 
-        var ftShadow = BuildFormattedText(item.Text, fontSize, shadowBrush);
-        dc.DrawText(ftShadow, new System.Windows.Point(ShadowOffset, ShadowOffset));
+            var offset = danmakuConfig.ShadowOffset;
+            var ftShadow = BuildFormattedText(item.Text, fontSize, shadowBrush);
+            dc.DrawText(ftShadow, new Point(offset, offset));
+        }
 
         // Main text
-        dc.DrawText(ft, new System.Windows.Point(0, 0));
+        dc.DrawText(ft, new Point(0, 0));
 
         // SC background
         if (item.IsSC)
         {
             var bgAlpha = (byte)(opacity * ScBackgroundAlpha * 255);
-            var bgBrush = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromArgb(bgAlpha, 0, 0, 0));
+            var bgBrush = new SolidColorBrush(Color.FromArgb(bgAlpha, 0, 0, 0));
             bgBrush.Freeze();
             double w = item.TextWidth + 12;
             double h = fontSize + 12;
@@ -138,19 +150,31 @@ public class DanmakuRenderer : FrameworkElement
         }
     }
 
-    private static FormattedText BuildFormattedText(string text, double fontSize, System.Windows.Media.Brush foreground)
+    private FormattedText BuildFormattedText(string text, double fontSize, Brush foreground)
     {
         return new FormattedText(
             text,
             CultureInfo.CurrentCulture,
             System.Windows.FlowDirection.LeftToRight,
-            new Typeface("Microsoft YaHei UI"),
+            new Typeface(new FontFamily("Microsoft YaHei UI"), FontStyles.Normal, _fontWeight, FontStretches.Normal),
             fontSize,
             foreground,
-            VisualTreeHelper.GetDpi(System.Windows.Application.Current.MainWindow).PixelsPerDip);
+            VisualTreeHelper.GetDpi(Application.Current.MainWindow).PixelsPerDip);
     }
 
-    private static System.Windows.Media.Color ColorFromInt(int color, float opacity = 1f)
+    private static FontWeight ParseFontWeight(string weight)
+    {
+        return weight switch
+        {
+            "Bold" => FontWeights.Bold,
+            "SemiBold" => FontWeights.SemiBold,
+            "Light" => FontWeights.Light,
+            "Medium" => FontWeights.Medium,
+            _ => FontWeights.Normal,
+        };
+    }
+
+    private static Color ColorFromInt(int color, float opacity = 1f)
     {
         byte r = (byte)((color >> 16) & 0xFF);
         byte g = (byte)((color >> 8) & 0xFF);
@@ -166,6 +190,6 @@ public class DanmakuRenderer : FrameworkElement
         }
 
         byte a = (byte)Math.Clamp(opacity * 255, 0, 255);
-        return System.Windows.Media.Color.FromArgb(a, r, g, b);
+        return Color.FromArgb(a, r, g, b);
     }
 }

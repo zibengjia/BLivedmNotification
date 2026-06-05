@@ -30,16 +30,53 @@ PIPE_BUFFER_SIZE = 65536
 
 
 class PipeWriter:
-    """Wraps a Named Pipe handle for writing."""
+    """Wraps a Named Pipe handle for writing. Auto-reconnects on disconnect."""
 
-    def __init__(self, pipe_handle):
+    def __init__(self, pipe_handle=None, pipe_path=None):
         self.pipe = pipe_handle
+        self.pipe_path = pipe_path
+        self._connected = pipe_handle is not None
 
     def send(self, data: bytes):
+        if not self._connected or self.pipe is None:
+            return
         try:
             win32file.WriteFile(self.pipe, data)
+        except win32file.error as e:
+            if e.winerror in (232, 109, 995):  # ERROR_NO_DATA, ERROR_BROKEN_PIPE, ERROR_OPERATION_ABORTED
+                self._connected = False
+                logger.info("Pipe disconnected")
+            else:
+                logger.exception("Pipe write failed")
         except Exception:
             logger.exception("Pipe write failed")
+
+    async def ensure_connected(self):
+        """Reconnect if disconnected. Called periodically from main loop."""
+        if self._connected:
+            return
+
+        # Close old handle if still open
+        if self.pipe is not None:
+            try:
+                win32file.CloseHandle(self.pipe)
+            except Exception:
+                pass
+            self.pipe = None
+
+        logger.info("Waiting for C# overlay to reconnect on %s ...", self.pipe_path)
+        loop = asyncio.get_running_loop()
+        new_pipe = win32pipe.CreateNamedPipe(
+            self.pipe_path,
+            win32pipe.PIPE_ACCESS_DUPLEX,
+            win32pipe.PIPE_TYPE_BYTE | win32pipe.PIPE_READMODE_BYTE | win32pipe.PIPE_WAIT,
+            win32pipe.PIPE_UNLIMITED_INSTANCES,
+            PIPE_BUFFER_SIZE, PIPE_BUFFER_SIZE, 0, None,
+        )
+        await loop.run_in_executor(None, lambda: win32pipe.ConnectNamedPipe(new_pipe, None))
+        self.pipe = new_pipe
+        self._connected = True
+        logger.info("C# overlay reconnected!")
 
 
 async def pipe_server(config: dict) -> PipeWriter:
@@ -79,7 +116,7 @@ async def pipe_server(config: dict) -> PipeWriter:
     # Default PIPE_WAIT mode ensures writes succeed — the pipe buffer is 64KB
     # and messages are small (JSON lines), so there's no blocking concern.
 
-    return PipeWriter(pipe)
+    return PipeWriter(pipe, pipe_path=pipe_path)
 
 
 async def main():
@@ -128,14 +165,27 @@ async def main():
     logger.info("Starting blivedm client for room %d", room_id)
     client.start()
 
+    async def pipe_watchdog():
+        """Periodically check pipe connection and reconnect if needed."""
+        while True:
+            await asyncio.sleep(1)
+            await pipe_writer.ensure_connected()
+
+    watchdog_task = asyncio.create_task(pipe_watchdog())
+
     try:
         # Keep running until interrupted
         await client.join()
     except asyncio.CancelledError:
         pass
     except KeyboardInterrupt:
-        logger.info("Shutting down ...")
+        pass
     finally:
+        watchdog_task.cancel()
+        try:
+            await watchdog_task
+        except asyncio.CancelledError:
+            pass
         await client.stop_and_close()
         if session is not None:
             await session.close()

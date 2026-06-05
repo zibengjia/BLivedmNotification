@@ -22,7 +22,7 @@ public class DanmakuEngine
 
     /// <summary>
     /// Delegate for accurate text width measurement using DirectWrite.
-    /// Set by OverlayForm after renderer initialization.
+    /// Set by OverlayWindow after renderer initialization.
     /// </summary>
     public Func<string, float, float>? MeasureTextWidth { get; set; }
 
@@ -55,7 +55,6 @@ public class DanmakuEngine
         var uname = GetString(msg, "uname");
         var text = GetString(msg, "msg");
         var color = GetInt(msg, "color", 0xFFFFFF);
-        // Use config font size for all danmaku — renderer uses a fixed format
         var fontSize = _config.Danmaku.FontSize;
         var timestamp = GetLong(msg, "timestamp", 0);
 
@@ -173,39 +172,16 @@ public class DanmakuEngine
 
     private void AssignTrack(DanmakuItem item)
     {
-        // Tight track height = font size + small gap, not screen ÷ TrackCount
-        var trackHeight = _config.Danmaku.FontSize + 6f;
-        var maxTracks = Math.Min(
-            _config.Danmaku.TrackCount,
-            (int)((ScreenHeight - ScZoneHeight) / trackHeight)
-        );
-        if (maxTracks < 1) maxTracks = 1;
+        var maxTracks = Math.Max(1, _config.Danmaku.TrackCount);
+        var trackHeight = (ScreenHeight - ScZoneHeight) / (float)maxTracks;
         var entryWidth = item.TextWidth;
+        var spacingMul = GetDensityMultiplier();
 
-        // Scan tracks top→bottom (0=highest). Take first with enough free space.
-        for (int t = 0; t < maxTracks; t++)
+        // First pass: find first track with enough free space
+        foreach (int t in GetTrackScanOrder(maxTracks))
         {
-            var trackTop = ScZoneHeight + t * trackHeight;
-            var trackBottom = trackTop + trackHeight;
-
-            // Find rightmost occupied pixel on this track
-            var rightmost = 0f;
-            foreach (var existing in _items)
-            {
-                if (existing.IsSC) continue;
-                if (existing.Y >= trackTop && existing.Y < trackBottom)
-                {
-                    var rightEdge = existing.X + existing.TextWidth;
-                    if (rightEdge > rightmost)
-                        rightmost = rightEdge;
-                }
-            }
-
-            // Free space at right edge
-            var freePx = ScreenWidth - rightmost;
-
-            // Enough room for new danmaku + 20% buffer? Take it.
-            if (freePx >= entryWidth * 1.2f)
+            var freePx = GetTrackFreeSpace(t, trackHeight);
+            if (freePx >= entryWidth * spacingMul)
             {
                 item.Track = t;
                 item.Y = ScZoneHeight + t * trackHeight;
@@ -213,25 +189,12 @@ public class DanmakuEngine
             }
         }
 
-        // All tracks blocked — pick the one with most free space (least worst)
+        // Fallback: all tracks blocked — pick the one with most free space
         var bestTrack = 0;
         var bestFree = float.MinValue;
-        for (int t = 0; t < maxTracks; t++)
+        foreach (int t in GetTrackScanOrder(maxTracks))
         {
-            var trackTop = ScZoneHeight + t * trackHeight;
-            var trackBottom = trackTop + trackHeight;
-            var rightmost = 0f;
-            foreach (var existing in _items)
-            {
-                if (existing.IsSC) continue;
-                if (existing.Y >= trackTop && existing.Y < trackBottom)
-                {
-                    var rightEdge = existing.X + existing.TextWidth;
-                    if (rightEdge > rightmost)
-                        rightmost = rightEdge;
-                }
-            }
-            var freePx = ScreenWidth - rightmost;
+            var freePx = GetTrackFreeSpace(t, trackHeight);
             if (freePx > bestFree)
             {
                 bestFree = freePx;
@@ -241,6 +204,78 @@ public class DanmakuEngine
 
         item.Track = bestTrack;
         item.Y = ScZoneHeight + bestTrack * trackHeight;
+    }
+
+    /// <summary>
+    /// Get free horizontal space on a given track (rightmost occupied pixel to screen edge).
+    /// </summary>
+    private float GetTrackFreeSpace(int trackIndex, float trackHeight)
+    {
+        var trackTop = ScZoneHeight + trackIndex * trackHeight;
+        var trackBottom = trackTop + trackHeight;
+        var rightmost = 0f;
+        foreach (var existing in _items)
+        {
+            if (existing.IsSC) continue;
+            if (existing.Y >= trackTop && existing.Y < trackBottom)
+            {
+                var rightEdge = existing.X + existing.TextWidth;
+                if (rightEdge > rightmost)
+                    rightmost = rightEdge;
+            }
+        }
+        return ScreenWidth - rightmost;
+    }
+
+    /// <summary>
+    /// Returns track indices in scan order based on position priority config.
+    /// </summary>
+    private IEnumerable<int> GetTrackScanOrder(int maxTracks)
+    {
+        var priority = _config.Danmaku.PositionPriority;
+
+        switch (priority)
+        {
+            case "Bottom":
+                for (int t = maxTracks - 1; t >= 0; t--)
+                    yield return t;
+                break;
+
+            case "Center":
+                // Start from middle, alternate outward
+                int mid = maxTracks / 2;
+                yield return mid;
+                for (int offset = 1; offset <= mid; offset++)
+                {
+                    if (mid - offset >= 0)
+                        yield return mid - offset;
+                    if (mid + offset < maxTracks)
+                        yield return mid + offset;
+                }
+                // If even count and we missed the last one
+                if (maxTracks % 2 == 0 && mid + 1 < maxTracks)
+                    yield return mid + 1;
+                break;
+
+            default: // "Top" and any unknown value
+                for (int t = 0; t < maxTracks; t++)
+                    yield return t;
+                break;
+        }
+    }
+
+    /// <summary>
+    /// Returns spacing multiplier based on density setting.
+    /// Higher = more free space needed = sparser danmaku.
+    /// </summary>
+    private float GetDensityMultiplier()
+    {
+        return _config.Danmaku.Density switch
+        {
+            "Low" => 2.5f,
+            "High" => 0.7f,
+            _ => 1.2f, // "Medium" and any unknown value
+        };
     }
 
     private static string GetString(JsonElement el, string key)

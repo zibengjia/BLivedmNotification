@@ -7,11 +7,12 @@ using System.Text;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Interop;
+using Wpf.Ui.Controls;
 using Forms = System.Windows.Forms;
 
 namespace Overlay;
 
-public partial class MainWindow : Window
+public partial class MainWindow : FluentWindow
 {
     private Config _config = null!;
     private readonly ProcessManager _processManager = new();
@@ -23,6 +24,7 @@ public partial class MainWindow : Window
     private const int MaxLogLines = 1000;
     private readonly StringBuilder _logBuffer = new();
     private int _logLineCount;
+    private bool _autoScroll = true;
 
     public MainWindow()
     {
@@ -40,6 +42,11 @@ public partial class MainWindow : Window
 
         // Init tray icon
         InitTrayIcon();
+
+        // Wire auto-scroll toggle
+        _autoScroll = AutoScrollToggle.IsChecked ?? true;
+        AutoScrollToggle.Checked += (_, _) => _autoScroll = true;
+        AutoScrollToggle.Unchecked += (_, _) => _autoScroll = false;
     }
 
     // ════════════════════════════════════════════════════════════
@@ -49,7 +56,7 @@ public partial class MainWindow : Window
     private void LoadConfigToUI()
     {
         _config = Config.Load();
-        RoomIdBox.Text = _config.RoomId.ToString();
+        RoomIdBox.Value = _config.RoomId;
         PipeNameBox.Text = _config.PipeName;
         if (!string.IsNullOrEmpty(_config.Sessdata))
             SessdataBox.Password = _config.Sessdata;
@@ -64,12 +71,20 @@ public partial class MainWindow : Window
         ScFontSizeSlider.Value = _config.SuperChat.FontSize;
         ScDurationSlider.Value = _config.SuperChat.DurationMs;
 
+        // New settings
+        SelectComboItem(FontWeightCombo, _config.Danmaku.FontWeight);
+        SelectComboItem(PositionPriorityCombo, _config.Danmaku.PositionPriority);
+        SelectComboItem(DensityCombo, _config.Danmaku.Density);
+        ShadowEnabledToggle.IsChecked = _config.Danmaku.ShadowEnabled;
+        ShadowOpacitySlider.Value = _config.Danmaku.ShadowOpacity;
+        ShadowOffsetSlider.Value = _config.Danmaku.ShadowOffset;
+
         UpdateSliderLabels();
     }
 
     private void SaveConfigToFile()
     {
-        _config.RoomId = int.TryParse(RoomIdBox.Text, out var rid) ? rid : 0;
+        _config.RoomId = (int)(RoomIdBox.Value ?? 0);
         _config.PipeName = PipeNameBox.Text.Trim();
         _config.Sessdata = SessdataBox.Password;
         _config.DisplayIndex = DisplayCombo.SelectedIndex >= 0 ? DisplayCombo.SelectedIndex : 0;
@@ -83,8 +98,30 @@ public partial class MainWindow : Window
         _config.SuperChat.FontSize = (int)ScFontSizeSlider.Value;
         _config.SuperChat.DurationMs = (int)ScDurationSlider.Value;
 
+        // New settings
+        _config.Danmaku.FontWeight = (FontWeightCombo.SelectedItem as ComboBoxItem)?.Content?.ToString() ?? "Normal";
+        _config.Danmaku.PositionPriority = (PositionPriorityCombo.SelectedItem as ComboBoxItem)?.Content?.ToString() ?? "Top";
+        _config.Danmaku.Density = (DensityCombo.SelectedItem as ComboBoxItem)?.Content?.ToString() ?? "Medium";
+        _config.Danmaku.ShadowEnabled = ShadowEnabledToggle.IsChecked ?? true;
+        _config.Danmaku.ShadowOpacity = (float)ShadowOpacitySlider.Value;
+        _config.Danmaku.ShadowOffset = (float)ShadowOffsetSlider.Value;
+
         _config.Save();
         Log("配置已保存。");
+    }
+
+    private static void SelectComboItem(System.Windows.Controls.ComboBox combo, string value)
+    {
+        foreach (ComboBoxItem item in combo.Items)
+        {
+            if (item.Content?.ToString() == value)
+            {
+                combo.SelectedItem = item;
+                return;
+            }
+        }
+        if (combo.Items.Count > 0)
+            combo.SelectedIndex = 0;
     }
 
     private void EnumerateMonitors()
@@ -263,7 +300,8 @@ public partial class MainWindow : Window
             }
 
             LogBox.Text = _logBuffer.ToString();
-            LogBox.ScrollToEnd();
+            if (_autoScroll)
+                LogBox.ScrollToEnd();
         });
     }
 
@@ -272,6 +310,19 @@ public partial class MainWindow : Window
         _logBuffer.Clear();
         _logLineCount = 0;
         LogBox.Text = "";
+    }
+
+    private void OnCopyLog(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            System.Windows.Clipboard.SetText(_logBuffer.ToString());
+            Log("日志已复制到剪贴板。");
+        }
+        catch (Exception ex)
+        {
+            Log($"[ERR] 复制失败: {ex.Message}");
+        }
     }
 
     // ════════════════════════════════════════════════════════════
@@ -287,12 +338,25 @@ public partial class MainWindow : Window
 
     private void UpdateSliderLabels()
     {
-        FontSizeLabel.Text = $"字号：{(int)FontSizeSlider.Value}";
-        SpeedLabel.Text = $"速度：{(int)SpeedSlider.Value} px/s";
-        OpacityLabel.Text = $"透明度：{OpacitySlider.Value:F2}";
-        TrackCountLabel.Text = $"轨道数：{(int)TrackCountSlider.Value}";
-        ScFontSizeLabel.Text = $"字号：{(int)ScFontSizeSlider.Value}";
-        ScDurationLabel.Text = $"持续时间：{(int)ScDurationSlider.Value} ms";
+        FontSizeLabel.Text = $"{(int)FontSizeSlider.Value}";
+        SpeedLabel.Text = $"{(int)SpeedSlider.Value}";
+        OpacityLabel.Text = $"{OpacitySlider.Value:F2}";
+        TrackCountLabel.Text = $"{(int)TrackCountSlider.Value}";
+        ScFontSizeLabel.Text = $"{(int)ScFontSizeSlider.Value}";
+        ScDurationLabel.Text = $"{(int)ScDurationSlider.Value} ms";
+        ShadowOpacityLabel.Text = $"{ShadowOpacitySlider.Value:F2}";
+        ShadowOffsetLabel.Text = $"{ShadowOffsetSlider.Value:F1}";
+    }
+
+    // ════════════════════════════════════════════════════════════
+    //  Shadow toggle
+    // ════════════════════════════════════════════════════════════
+
+    private void OnShadowToggled(object sender, RoutedEventArgs e)
+    {
+        bool enabled = ShadowEnabledToggle.IsChecked ?? false;
+        ShadowOpacitySlider.IsEnabled = enabled;
+        ShadowOffsetSlider.IsEnabled = enabled;
     }
 
     // ════════════════════════════════════════════════════════════

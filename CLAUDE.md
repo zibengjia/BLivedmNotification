@@ -5,25 +5,25 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Commands
 
 ```bash
-# C# WinForms overlay — Build
-cd overlay-csharp && dotnet build
-
-# C# WinForms overlay — Run (with config UI)
-cd overlay-csharp && dotnet run --project Overlay
-
-# C# WinForms overlay — Run overlay-only mode (skip launcher, for debugging)
-cd overlay-csharp && dotnet run --project Overlay -- --overlay
-
-# C# WPF overlay — Build (new, replaces WinUI 3)
+# C# WPF overlay — Build (primary, active development)
 cd overlay-csharp/WpfOverlay && dotnet build
 
 # C# WPF overlay — Run (with launcher)
 cd overlay-csharp/WpfOverlay && dotnet run
 
-# C# WPF overlay — Run overlay-only mode (no launcher, for debugging)
+# C# WPF overlay — Run overlay-only mode (no launcher, for debugging when backend is running separately)
 cd overlay-csharp/WpfOverlay && dotnet run -- --overlay
 
-# C# WinUI 3 overlay — Build (WIP, abandoned due to transparency issue)
+# C# WinForms overlay — Build (legacy stable version)
+cd overlay-csharp/Overlay && dotnet build
+
+# C# WinForms overlay — Run (with config UI)
+cd overlay-csharp/Overlay && dotnet run
+
+# C# WinForms overlay — Run overlay-only mode
+cd overlay-csharp/Overlay && dotnet run -- --overlay
+
+# C# WinUI 3 overlay — Build (WIP, abandoned — transparency unsolved)
 cd overlay-csharp/WinUIOverlay && dotnet build
 
 # Python — Setup (PDM or uv)
@@ -44,20 +44,22 @@ No test suite, linter config, or CI exists.
 Dual-process bilibili live danmaku overlay for Windows:
 
 ```
-B站 WebSocket ← blivedm (Python) → [Named Pipe] → PipeClient (C#) → DanmakuEngine → DanmakuRenderer → Direct2D overlay
+B站 WebSocket ← blivedm (Python) → [Named Pipe] → PipeClient (C#) → DanmakuEngine → DanmakuRenderer → transparent overlay
 ```
 
 Two processes communicate over a Windows Named Pipe with JSON-line protocol:
 
 1. **Python backend** (`py_overlay/`): blivedm WebSocket client → OverlayHandler → Named Pipe server
-2. **C# frontend** (`overlay-csharp/`): Two parallel versions —
-   - **WinForms** (stable): `Overlay/` — WinForms launcher (MainForm) + Direct2D transparent overlay (OverlayForm)
-   - **WinUI 3** (WIP, replaces WinForms): `WinUIOverlay/` — WinUI 3 launcher (MainWindow) + Win2D transparent overlay (OverlayWindow)
+2. **C# frontend** (`overlay-csharp/`): Three versions by evolution —
+   - **WPF** (primary, active): `WpfOverlay/` — WPF launcher (MainWindow) + transparent overlay (OverlayWindow) via `AllowsTransparency`
+   - **WinForms** (legacy stable): `Overlay/` — WinForms launcher (MainForm) + Direct2D transparent overlay (OverlayForm)
+   - **WinUI 3** (WIP, abandoned — transparency unsolved): `WinUIOverlay/`
 
-Both read/write `config.json` at repo root (snake_case fields, shared format).
+All read/write `config.json` at repo root (snake_case fields, shared format).
 
 **Config default values** differ by implementation (each falls back independently when file is missing):
 - **Python fallback** (`py_overlay/config.py`): font_size=28, speed=300, opacity=0.9, track_count=12
+- **C# WPF** (Config.cs): font_size=28, speed=300, opacity=0.9, track_count=12
 - **C# WinForms** (Config.cs): font_size=21, speed=280, opacity=1.0, track_count=14
 - **C# WinUI 3** (Config.cs): font_size=21, speed=300, opacity=1.0, track_count=12
 The launcher UI populates from saved `config.json`, not from code defaults.
@@ -85,8 +87,20 @@ BLivedmNotification/
 │   └── config.py                # Loads config.json with defaults
 ├── uv.lock                      # uv lockfile (if using uv instead of pdm)
 │
-├── overlay-csharp/              # C# overlays (WinForms stable + WPF new)
-│   ├── Overlay/                 # WinForms version (stable, Vortice.Direct2D1)
+├── overlay-csharp/              # C# overlays (WPF primary, WinForms legacy)
+│   ├── WpfOverlay/              # WPF overlay (primary, active development)
+│   │   ├── WpfOverlay.csproj    # net8.0-windows, UseWPF, UseWindowsForms (NotifyIcon)
+│   │   ├── App.xaml / .cs       # Entry: --overlay → OverlayWindow, else → MainWindow
+│   │   ├── Config.cs            # Config POCO (same schema, +PythonPath)
+│   │   ├── DanmakuEngine.cs     # Track assignment, collision detection, animation update
+│   │   ├── DanmakuItem.cs       # Danmaku/SC display state
+│   │   ├── PipeClient.cs        # Named Pipe consumer (reconnect on disconnect)
+│   │   ├── ProcessManager.cs    # Python backend process lifecycle (venv/uv auto-detect)
+│   │   ├── MainWindow.xaml/.cs  # Launcher: TabControl, status bar, log, NotifyIcon tray
+│   │   ├── OverlayWindow.xaml/.cs # Transparent overlay via AllowsTransparency=True
+│   │   └── DanmakuRenderer.cs   # DrawingVisual + VisualCollection, FormattedText
+│   │
+│   ├── Overlay/                 # WinForms version (legacy stable, Vortice.Direct2D1)
 │   │   ├── Program.cs           # Entry: MainForm, or --overlay flag for direct overlay
 │   │   ├── MainForm.cs          # Launcher: tabbed settings + start/stop buttons + tray
 │   │   ├── OverlayForm.cs       # Transparent fullscreen overlay window (Escape to close)
@@ -96,18 +110,6 @@ BLivedmNotification/
 │   │   ├── DanmakuItem.cs       # Danmaku/SC display state
 │   │   ├── PipeClient.cs        # Named Pipe consumer (reconnect on disconnect)
 │   │   └── Overlay.csproj       # net8.0-windows, WinForms, Vortice.Direct2D1
-│   │
-│   └── WpfOverlay/              # WPF overlay (replaces WinUI 3)
-│       ├── WpfOverlay.csproj    # net8.0-windows, UseWPF, UseWindowsForms (NotifyIcon)
-│       ├── App.xaml / .cs       # Entry: --overlay → OverlayWindow, else → MainWindow
-│       ├── Config.cs            # Config POCO (same schema, +PythonPath)
-│       ├── DanmakuEngine.cs     # Track assignment, collision detection (shared)
-│       ├── DanmakuItem.cs       # Danmaku/SC display state (shared)
-│       ├── PipeClient.cs        # Named Pipe consumer (shared)
-│       ├── ProcessManager.cs    # Python backend process lifecycle
-│       ├── MainWindow.xaml/.cs  # Launcher: TabControl, status bar, log, NotifyIcon tray
-│       ├── OverlayWindow.xaml/.cs # Transparent overlay via AllowsTransparency
-│       └── DanmakuRenderer.cs   # DrawingVisual + VisualCollection, FormattedText
 │
 ├── overlay-csharp/WinUIOverlay/ # WinUI 3 overlay (WIP, replaces WinForms)
 │   ├── App.xaml{.cs}            # Entry: MainWindow or --overlay → OverlayWindow
@@ -153,11 +155,18 @@ BLivedmNotification/
   "display_index": 0,           // Monitor index for overlay fullscreen
   "pipe_name": "BlivedmOverlay",// Named Pipe name
   "sessdata": "",               // B站 SESSDATA cookie for auth (optional)
+  "python_path": "",            // Python executable path (empty = auto-detect venv/uv)
   "danmaku": {
     "font_size": 21,            // Font size in px
     "speed": 280,               // Scroll speed (px/s) — WinForms default 280, WinUI default 300
     "opacity": 1.0,            // 0.0–1.0
-    "track_count": 14           // Number of danmaku tracks — WinForms default 14, WinUI default 12
+    "track_count": 14,          // Number of danmaku tracks — WinForms default 14, WinUI default 12
+    "font_weight": "Normal",    // Normal/Light/Medium/SemiBold/Bold
+    "shadow_enabled": true,     // Enable text shadow
+    "shadow_opacity": 0.6,      // Shadow opacity 0.0–1.0
+    "shadow_offset": 2.0,       // Shadow offset in px
+    "position_priority": "Top", // Track fill order: Top/Center/Bottom
+    "density": "Medium"          // Spacing: Low (sparse)/Medium/High (dense)
   },
   "super_chat": {
     "font_size": 40,            // SC font size in px
@@ -166,16 +175,16 @@ BLivedmNotification/
 }
 ```
 
-**Overlay.exe startup** (both WinForms and WinUI):
+**Overlay.exe startup** (all C# versions):
 - Normal mode: Launcher window — config editor + start/stop buttons + system tray
-- `--overlay` flag: direct `OverlayForm`/`OverlayWindow` using existing `config.json` (useful for debugging overlay in isolation when backend is already running separately)
+- `--overlay` flag: direct OverlayWindow using existing `config.json` (useful for debugging overlay in isolation when backend is already running separately)
 
 **User flow**:
-1. MainForm launcher: configure room ID, SESSDATA, danmaku params
-2. Click "全部启动" → SaveConfig() → StartBackend() (Python process) → ShowOverlay() (OverlayForm) → MainForm hides to tray
-3. Escape in overlay → closes OverlayForm, restores MainForm
-4. "停止后端" → Kill Python process tree
-5. Close MainForm → kill backend + close overlay + exit
+1. Launcher: configure room ID, SESSDATA, danmaku params
+2. Click "全部启动" → SaveConfig() → StartBackend() (Python process) → ShowOverlay() → launcher hides to tray
+3. Escape in overlay → closes overlay, restores launcher
+4. "停止后端" → Kill Python process tree (entireProcessTree: true)
+5. Close launcher → kill backend + close overlay + exit
 
 ## Key C# Overlay Details
 
@@ -221,6 +230,74 @@ BLivedmNotification/
 - `[JsonPropertyName("snake_case")]` on all properties — shared format with Python-side `config.json`
 - `ResolveConfigPath()`: walks up from exe dir looking for `config.json`
 - `ConfigPath` property tracks where it was loaded from (used for Save + project root resolution)
+
+## Key WPF Overlay Details (`WpfOverlay/`)
+
+Primary overlay. Replaces WinForms/WinUI. No external rendering libs — pure WPF `DrawingVisual` + `FormattedText`.
+
+### App.xaml.cs (entry point)
+
+- `OnStartup()` checks `--overlay` flag (args or `Environment.CommandLine`)
+- Overlay mode → `Config.Load()` → `OverlayWindow` → `Shutdown` on close
+- Launcher mode → `MainWindow` (normal UI)
+- Crash logging: writes unhandled exceptions to `WpfOverlay_crash.log` (AppDomain, Dispatcher, TaskScheduler handlers)
+
+### OverlayWindow.xaml
+
+```xml
+AllowsTransparency="True"
+Background="Transparent"
+Topmost="True"
+ShowInTaskbar="False"
+IsHitTestVisible="False"   <!-- click-through, no WS_EX_TRANSPARENT needed -->
+```
+
+- `<Canvas>` child for visual rendering
+- ResizeMode="NoResize", WindowStyle="None"
+- No WS_EX_LAYERED (WPF handles transparency natively)
+
+### OverlayWindow.xaml.cs
+
+- `WindowInteropHelper` to get HWND → `SetWindowLong(GWL_EXSTYLE)` adds `WS_EX_TRANSPARENT | WS_EX_TOOLWINDOW | WS_EX_NOACTIVATE` (belt-and-suspenders with XAML `IsHitTestVisible`)
+- Fullscreen on target monitor: `Screen.AllScreens[displayIndex]` → set `Left/Top/Width/Height`
+- `RegisterHotKey(VK_ESCAPE)` → `WM_HOTKEY` → close overlay, fire `OverlayClosed`
+- Render loop: `CompositionTarget.Rendering` event (WPF's per-frame callback) → `engine.Update()` → `renderer.Sync(engine.GetItems())`
+
+### DanmakuRenderer.cs
+
+- **`DrawingVisual` + `VisualCollection`**: no `OnRender` override, each danmaku is a cached `DrawingVisual` repositioned via `visual.Offset = new Vector(x, y)` (GPU transform, no redraw cost)
+- **Object pooling**: recycled `DrawingVisual`s queued in `_pool`, reused via `GetOrCreateVisual()` — reduces GC pressure
+- **`FormattedText`** for text measurement and rendering (DirectWrite-backed, accurate)
+- Frame pipeline: `Sync(items)` → diff `_itemMap` against new items → add/update/remove visuals in one pass
+- Items per frame: shadow (offset 2px, 60% opacity) + main text + optional SC dark background (rect)
+- `ColorFromInt()`: same brightness clamp as WinForms (lum < 0.3 → raised to 0.3)
+
+### ProcessManager.cs
+
+- `Start(projectRoot, roomId, pythonCmd)`: runs `py_overlay/main.py --room {room_id}` with stdout/stderr redirect
+- **Python auto-detect**: `ResolvePythonCmd()` checks in order:
+  1. Configured path from `config.json` (non-empty and not "python")
+  2. `.venv/Scripts/python.exe` (Windows venv)
+  3. `.venv/bin/python` (Unix venv)
+  4. `uv.exe` from `LocalAppData\Microsoft\WindowsApps`
+  5. Fallback `"python"`
+- `Stop()`: `Kill(entireProcessTree: true)` + Exited handler fires `StatusChanged(false)`
+- Output/Error lines → `LogMessage` event (shown in launcher log area)
+
+### MainWindow.xaml.cs (launcher)
+
+- TabControl with 4 tabs: 基本设置 (room/pipe/SESSDATA/display/python path), 弹幕设置 (font/speed/opacity/tracks), 醒目留言 (font/duration), 关于
+- Status bar: colored dots for backend + overlay, toggle buttons
+- `NotifyIcon` system tray (using `System.Windows.Forms` interop), minimize → tray
+- Log buffer: `StringBuilder` capped at 1000 lines
+- `OnClosing`: kill backend → close overlay → dispose tray
+- Project root resolved from `config.json` location, same as WinForms
+
+### Shared-layer files (same logic across all C# versions)
+
+- **DanmakuEngine.cs**: track assignment (`AssignTrack`), collision detection (rightmost-pixel), SC zone (50px top reserved). `Update()` moves items by `Speed * dt`, fades at screen edges. Thread-safe via `lock`.
+- **DanmakuItem.cs**: danmaku/SC display state. `IsExpired()`: SC by `LifetimeMs >= MaxLifetimeMs`, danmaku by `X + TextWidth < -50`.
+- **PipeClient.cs**: `NamedPipeClientStream`, JSON-line framing (`\n` delimiter), auto-reconnect every 2s. Events: `OnMessage`, `OnError`, `OnConnected`, `OnDisconnected`.
 
 ## Key Python Overlay Details
 
@@ -326,12 +403,18 @@ WinUI 3 rewrite using WinAppSDK + Win2D instead of WinForms + Vortice. Shares sa
 
 ### Dependencies
 
-**C# — WinForms (overlay-csharp/Overlay/Overlay.csproj)**:
+**C# — WPF (primary, overlay-csharp/WpfOverlay/WpfOverlay.csproj)**:
+- `WPF-UI` 4.3.0 — WPF UI library (FluentWindow, themed controls, Mica backdrop)
+- `System.Text.Json` 8.0.5 — JSON serialization
+- Target: `net8.0-windows`, `UseWPF=true`, `UseWindowsForms=true` (for NotifyIcon tray)
+- Rendering: pure WPF `DrawingVisual` + `FormattedText` (no external rendering lib)
+
+**C# — WinForms (legacy, overlay-csharp/Overlay/Overlay.csproj)**:
 - `Vortice.Direct2D1` 2.4.2 — Direct2D/DirectWrite .NET bindings
 - `System.Text.Json` 8.0.5 — JSON serialization
 - Target: `net8.0-windows`, WinForms enabled
 
-**C# — WinUI 3 (overlay-csharp/WinUIOverlay/WinUIOverlay.csproj)**:
+**C# — WinUI 3 (WIP, overlay-csharp/WinUIOverlay/WinUIOverlay.csproj)**:
 - `Microsoft.WindowsAppSDK` 2.1.3 — WinUI 3 framework
 - `Microsoft.Windows.SDK.BuildTools` 10.0.28000.1839 — Windows SDK
 - `Microsoft.Graphics.Win2D` 1.4.0 — Win2D rendering (replaces Vortice)
@@ -364,3 +447,13 @@ WinUI 3's DirectComposition composition tree paints a white root visual behind C
 **Likely fix:** The `TransparentBackdrop` composition brush needs to be properly wired to the composition visual. Current implementation creates the brush but may not apply it. Check `DesktopAcrylicBackdrop` source for proper pattern.
 
 **Reference doc provided by user:** Steps include transparent SystemBackdrop → Win32 style cleanup → WS_EX_LAYERED → SetLayeredWindowAttributes → DWM de-round/de-border → WM_ERASEBKGND. Follow order exactly.
+
+## Known Issues / TODOs
+
+- **Packaging**: Create installer/package for distribution (currently requires build-from-source)
+- **Per-danmaku font weight**: If Python backend sends `font_weight` per message, DanmakuItem needs a new field
+
+Other notes:
+- WPF overlay was introduced to fix WinUI transparency (unsolved). WPF `AllowsTransparency=True` works correctly.
+- WinForms version is maintained but no longer active development — new features go into WPF first.
+- WinUI 3 version is abandoned unless the DirectComposition white-background issue is resolved upstream.
