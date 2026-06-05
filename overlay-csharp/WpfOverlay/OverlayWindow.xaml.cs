@@ -49,6 +49,9 @@ public sealed partial class OverlayWindow : Window
             exStyle = GetWindowLong(hwnd, GWL_EXSTYLE);
             LogDebug($"GWL_EXSTYLE after: 0x{exStyle:X8}");
 
+            // Exclude from screen capture (privacy)
+            SetWindowDisplayAffinity(hwnd, WDA_EXCLUDEFROMCAPTURE);
+
             // Fullscreen on target monitor
             var screens = System.Windows.Forms.Screen.AllScreens;
             var displayIndex = Math.Clamp(_config.DisplayIndex, 0, screens.Length - 1);
@@ -107,6 +110,11 @@ public sealed partial class OverlayWindow : Window
         if (_closing) return;
 
         _engine.Update();
+
+        // Check mouse hover (GetCursorPos works even with click-through window)
+        if (GetCursorPos(out var pt))
+            _engine.CheckHover(pt.X - (float)Left, pt.Y - (float)Top);
+
         _renderer.Sync(_engine.GetItems());
     }
 
@@ -158,9 +166,25 @@ public sealed partial class OverlayWindow : Window
     private const uint WS_EX_TOOLWINDOW = 0x00000080;
     private const uint WS_EX_NOACTIVATE = 0x08000000;
 
+    private const uint WDA_NONE = 0x00000000;
+    private const uint WDA_EXCLUDEFROMCAPTURE = 0x00000011;
+
     [DllImport("user32.dll", SetLastError = true)]
     private static extern uint GetWindowLong(IntPtr hWnd, int nIndex);
 
     [DllImport("user32.dll", SetLastError = true)]
     private static extern uint SetWindowLong(IntPtr hWnd, int nIndex, uint dwNewLong);
+
+    [DllImport("user32.dll")]
+    private static extern bool SetWindowDisplayAffinity(IntPtr hWnd, uint dwAffinity);
+
+    [DllImport("user32.dll")]
+    private static extern bool GetCursorPos(out POINT lpPoint);
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct POINT
+    {
+        public int X;
+        public int Y;
+    }
 }

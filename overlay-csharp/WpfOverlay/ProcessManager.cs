@@ -9,6 +9,8 @@ namespace Overlay.Services;
 public class ProcessManager : IDisposable
 {
     private Process? _pythonProcess;
+    private int _processGeneration;
+    private volatile int _currentGeneration = -1;
 
     public bool IsRunning => _pythonProcess is { HasExited: false };
     public int? ProcessId => _pythonProcess?.Id;
@@ -48,6 +50,9 @@ public class ProcessManager : IDisposable
 
         try
         {
+            var myGen = Interlocked.Increment(ref _processGeneration);
+            _currentGeneration = myGen;
+
             _pythonProcess = new Process { StartInfo = psi, EnableRaisingEvents = true };
 
             _pythonProcess.OutputDataReceived += (_, e) =>
@@ -62,10 +67,14 @@ public class ProcessManager : IDisposable
             };
             _pythonProcess.Exited += (_, _) =>
             {
-                if (Interlocked.Exchange(ref _pythonProcess, null) is { } oldProc)
+                // Only handle if this generation's process is still current
+                if (Interlocked.CompareExchange(ref _currentGeneration, -1, myGen) == myGen)
                 {
-                    oldProc.Dispose();
-                    StatusChanged?.Invoke(false);
+                    if (Interlocked.Exchange(ref _pythonProcess, null) is { } oldProc)
+                    {
+                        oldProc.Dispose();
+                        StatusChanged?.Invoke(false);
+                    }
                 }
             };
 
@@ -86,7 +95,10 @@ public class ProcessManager : IDisposable
 
     public void Stop()
     {
-        var proc = _pythonProcess;
+        // Mark current generation as stale so Exited handler won't steal new process
+        Interlocked.Exchange(ref _currentGeneration, -1);
+
+        var proc = Interlocked.Exchange(ref _pythonProcess, null);
         if (proc is { HasExited: false })
         {
             try
@@ -100,9 +112,7 @@ public class ProcessManager : IDisposable
             }
         }
 
-        // Immediately clean up and notify UI — don't wait for Exited event
         proc?.Dispose();
-        _pythonProcess = null;
         StatusChanged?.Invoke(false);
     }
 

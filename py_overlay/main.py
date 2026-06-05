@@ -162,6 +162,17 @@ async def main():
     handler = OverlayHandler(pipe_writer)
     client.set_handler(handler)
 
+    # Fetch room info (主播名, 标题, 状态等)
+    await client.init_room()
+    logger.info("房间: %s | 主播: %s | 标题: %s | 状态: %s | 在线: %d",
+                client.room_id,
+                client.room_uname or "(unknown)",
+                client.room_title or "(无)",
+                {0: "未开播", 1: "直播中", 2: "轮播"}.get(client.live_status, "?"),
+                client.online)
+    if client.live_status == 1 and client.live_time:
+        logger.info("开播时间: %s", client.live_time)
+
     logger.info("Starting blivedm client for room %d", room_id)
     client.start()
 

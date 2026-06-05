@@ -50,14 +50,16 @@ public class DanmakuRenderer : FrameworkElement
 
             if (_itemMap.TryGetValue(item, out var visual))
             {
-                // Update position only
+                // Update position and opacity
                 visual.Offset = new Vector(item.X, item.Y);
+                visual.Opacity = item.IsHovered ? 0.0 : item.Opacity;
             }
             else
             {
                 // New item — render and add
                 visual = GetOrCreateVisual(item);
                 visual.Offset = new Vector(item.X, item.Y);
+                visual.Opacity = item.IsHovered ? 0.0 : item.Opacity;
                 _itemMap[item] = visual;
                 _visuals.Add(visual);
             }
@@ -114,7 +116,9 @@ public class DanmakuRenderer : FrameworkElement
         using var dc = visual.RenderOpen();
 
         var fontSize = item.FontSize;
-        var opacity = item.Opacity;
+        // Use 1.0 opacity at render time — visual.Opacity (set per-frame in Sync)
+        // handles hover, fade-at-edge, and SC fade effects at GPU level.
+        const float opacity = 1.0f;
         var textColor = ColorFromInt(item.Color, opacity);
 
         var foregroundBrush = new SolidColorBrush(textColor);

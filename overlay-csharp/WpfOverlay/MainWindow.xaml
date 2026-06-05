@@ -38,16 +38,6 @@
                         <ui:Card Margin="0,0,0,0" Padding="12">
                             <StackPanel>
                                 <TextBlock Text="连接设置" FontWeight="SemiBold" Margin="0,0,0,8" />
-                                <!-- Room ID -->
-                                <Grid>
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="100" />
-                                        <ColumnDefinition Width="*" />
-                                    </Grid.ColumnDefinitions>
-                                    <TextBlock Text="房间 ID：" VerticalAlignment="Center" />
-                                    <ui:NumberBox x:Name="RoomIdBox" Grid.Column="1"
-                                                  Minimum="1" Maximum="99999999" />
-                                </Grid>
 
                                 <!-- Pipe Name -->
                                 <Grid>
@@ -101,7 +91,8 @@
                                                Icon="{ui:SymbolIcon FolderOpen24}" Margin="4,0,0,0"
                                                Click="OnBrowsePython" />
                                 </Grid>
-                                <TextBlock Text="提示：留空使用系统 PATH 中的 python。修改后需点击「保存配置」。"
+                                <TextBlock TextWrapping="Wrap"
+                                           Text="提示：用于运行 py_overlay/main.py（B站弹幕后端）。留空则自动检测：项目 .venv → uv.exe → 系统 PATH 中的 python。指定路径可固定使用特定环境（如 pyenv、conda）。修改后需点击「保存配置」。"
                                            Foreground="{ui:ThemeResource TextFillColorSecondaryBrush}"
                                            FontSize="11" />
                             </StackPanel>
@@ -110,7 +101,58 @@
                 </ScrollViewer>
             </TabItem>
 
-            <!-- ── Tab 2: 弹幕设置 ── -->
+            <!-- ── Tab 2: 房间 ── -->
+            <TabItem Header="房间">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel Margin="8">
+                        <ui:Card Padding="12">
+                            <StackPanel>
+                                <TextBlock Text="房间列表" FontWeight="SemiBold" Margin="0,0,0,8" />
+                                <ListBox x:Name="RoomListBox" Height="150"
+                                         SelectionChanged="OnRoomSelectionChanged" />
+                                <Grid Margin="0,4,0,0">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <ui:NumberBox x:Name="NewRoomIdBox" Grid.Column="0"
+                                                  PlaceholderText="输入房间号添加" Minimum="1" Maximum="99999999" />
+                                    <StackPanel Grid.Column="1" Orientation="Horizontal" Margin="4,0,0,0">
+                                        <ui:Button Content="添加" Click="OnAddRoom" />
+                                        <ui:Button Content="获取名称" Click="OnFetchRoomName" Margin="4,0" Appearance="Secondary" />
+                                        <ui:Button Content="删除" Click="OnRemoveRoom" Appearance="Danger" />
+                                    </StackPanel>
+                                </Grid>
+                                <TextBlock Text="提示：点击列表中的房间可切换弹幕来源。切换后后端会自动重启。"
+                                           Foreground="{ui:ThemeResource TextFillColorSecondaryBrush}"
+                                           FontSize="11" Margin="0,2,0,4" />
+                            </StackPanel>
+                        </ui:Card>
+
+                        <ui:Card Padding="12">
+                            <StackPanel>
+                                <TextBlock Text="房间备注" FontWeight="SemiBold" Margin="0,0,0,8" />
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="60" />
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="备注名：" VerticalAlignment="Center" />
+                                    <TextBox x:Name="RoomLabelBox" Grid.Column="1" Text="" />
+                                    <ui:Button Grid.Column="2" Content="保存备注" Margin="4,0,0,0"
+                                               Click="OnSaveRoomLabel" />
+                                </Grid>
+                                <TextBlock Text="可自定义房间显示名称。点击「获取名称」自动从 B站 拉取主播名填入。"
+                                           Foreground="{ui:ThemeResource TextFillColorSecondaryBrush}"
+                                           FontSize="11" Margin="0,4,0,0" />
+                            </StackPanel>
+                        </ui:Card>
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+
+            <!-- ── Tab 3: 弹幕设置 ── -->
             <TabItem Header="弹幕设置">
                 <ScrollViewer VerticalScrollBarVisibility="Auto">
                     <StackPanel Margin="8">
@@ -271,11 +313,30 @@
                                 </Grid>
                             </StackPanel>
                         </ui:Card>
+
+                        <!-- 鼠标悬停设置 -->
+                        <ui:Card Padding="12">
+                            <StackPanel>
+                                <TextBlock Text="鼠标悬停设置" FontWeight="SemiBold" Margin="0,0,0,8" />
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="80" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="悬停隐藏：" VerticalAlignment="Center" />
+                                    <ui:ToggleSwitch x:Name="HoverHideToggle" Grid.Column="1"
+                                                     Content="鼠标移到弹幕上时隐藏该弹幕" />
+                                </Grid>
+                                <TextBlock Text="提示：覆盖层默认穿透鼠标事件，通过系统级鼠标坐标检测实现。"
+                                           Foreground="{ui:ThemeResource TextFillColorSecondaryBrush}"
+                                           FontSize="11" />
+                            </StackPanel>
+                        </ui:Card>
                     </StackPanel>
                 </ScrollViewer>
             </TabItem>
 
-            <!-- ── Tab 3: 醒目留言 ── -->
+            <!-- ── Tab 4: 醒目留言 ── -->
             <TabItem Header="醒目留言">
                 <ScrollViewer VerticalScrollBarVisibility="Auto">
                     <StackPanel Margin="8">
@@ -315,7 +376,7 @@
                 </ScrollViewer>
             </TabItem>
 
-            <!-- ── Tab 4: 日志 ── -->
+            <!-- ── Tab 5: 日志 ── -->
             <TabItem Header="日志">
                 <Grid Margin="8">
                     <Grid.RowDefinitions>
@@ -351,7 +412,7 @@
                 </Grid>
             </TabItem>
 
-            <!-- ── Tab 5: 关于 ── -->
+            <!-- ── Tab 6: 关于 ── -->
             <TabItem Header="关于">
                 <StackPanel Margin="16" VerticalAlignment="Center" HorizontalAlignment="Center">
                     <ui:Card Padding="24" Margin="0,0,0,12">

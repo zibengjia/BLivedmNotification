@@ -1,2 +1,20 @@
-!/.venv/
-!/.idea/
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+
+# C# build outputs
+bin/
+obj/
+
+# Debug logs
+*_debug.log
+*_crash.log
+overlay_debug.log
+WpfOverlay_crash.log
+
+# IDE
+.idea/
+.vscode/
+*.swp

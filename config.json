@@ -1,5 +1,5 @@
 {
-  "room_id": 650,
+  "room_id": 27484357,
   "display_index": 0,
   "pipe_name": "BlivedmOverlay",
   "sessdata": "dedecfa4%2C1791691681%2C15798%2A41CjCXfGWgjsKvLe8XA2vDYMHY4e2kvFBiKF5wchKCIoLA54sXFrxqxCkbK4y-RXKiDdoSVnk3eDE0dmpDdnprNmYyUzJSYVlvN01HSTZDdFBVbkFjVmd0b3M1Ti1YZGttRTBNeTItY01LS1lWRDVRYXhKcGlDcmMyMmszWnRiM25nT1ZEZDdDeGFRIIEC",
@@ -7,17 +7,31 @@
   "danmaku": {
     "font_size": 24,
     "speed": 150,
-    "opacity": 0.6,
+    "opacity": 0.85,
     "track_count": 15,
     "font_weight": "Medium",
     "shadow_enabled": true,
     "shadow_opacity": 1,
     "shadow_offset": 2,
     "position_priority": "Top",
-    "density": "Medium"
+    "density": "Medium",
+    "hover_hide_enabled": true
   },
   "super_chat": {
     "font_size": 40,
     "duration_ms": 15000
-  }
+  },
+  "rooms": [
+    {
+      "room_id": 27484357,
+      "label": "\u59AE\u8389\u5B89Lily",
+      "DisplayText": "\u59AE\u8389\u5B89Lily (27484357)"
+    },
+    {
+      "room_id": 4350043,
+      "label": "\u4E00\u7C73\u516B\u7684\u5764\u513F",
+      "DisplayText": "\u4E00\u7C73\u516B\u7684\u5764\u513F (4350043)"
+    }
+  ],
+  "selected_room_index": 0
 }

@@ -27,9 +27,44 @@ public class Config
     [JsonPropertyName("super_chat")]
     public SuperChatConfig SuperChat { get; set; } = new();
 
+    [JsonPropertyName("rooms")]
+    public List<RoomEntry> Rooms { get; set; } = new();
+
+    [JsonPropertyName("selected_room_index")]
+    public int SelectedRoomIndex { get; set; } = 0;
+
     /// <summary>Path this config was loaded from (set by Load).</summary>
     [JsonIgnore]
     public string? ConfigPath { get; set; }
+
+    /// <summary>
+    /// Get the currently selected room entry, or create a default one.
+    /// </summary>
+    [JsonIgnore]
+    public RoomEntry CurrentRoom
+    {
+        get
+        {
+            if (Rooms.Count > 0 && SelectedRoomIndex >= 0 && SelectedRoomIndex < Rooms.Count)
+                return Rooms[SelectedRoomIndex];
+            // Fall back to the legacy room_id
+            var entry = new RoomEntry { RoomId = RoomId };
+            Rooms.Add(entry);
+            SelectedRoomIndex = 0;
+            return entry;
+        }
+    }
+
+    public class RoomEntry
+    {
+        [JsonPropertyName("room_id")]
+        public int RoomId { get; set; }
+
+        [JsonPropertyName("label")]
+        public string Label { get; set; } = "";
+
+        public string DisplayText => string.IsNullOrEmpty(Label) ? $"{RoomId}" : $"{Label} ({RoomId})";
+    }
 
     public class DanmakuConfig
     {
@@ -62,6 +97,9 @@ public class Config
 
         [JsonPropertyName("density")]
         public string Density { get; set; } = "Medium";
+
+        [JsonPropertyName("hover_hide_enabled")]
+        public bool HoverHideEnabled { get; set; } = false;
     }
 
     public class SuperChatConfig
@@ -124,6 +162,14 @@ public class Config
                 if (config != null)
                 {
                     config.ConfigPath = resolved;
+
+                    // Migrate: if rooms list is empty, populate from legacy room_id
+                    if (config.Rooms.Count == 0 && config.RoomId > 0)
+                    {
+                        config.Rooms.Add(new RoomEntry { RoomId = config.RoomId, Label = "" });
+                        config.SelectedRoomIndex = 0;
+                    }
+
                     return config;
                 }
             }

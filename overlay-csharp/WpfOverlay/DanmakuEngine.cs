@@ -278,6 +278,32 @@ public class DanmakuEngine
         };
     }
 
+    /// <summary>
+    /// Check if mouse position hovers over any danmaku.
+    /// Sets IsHovered flag so renderer can hide hovered items.
+    /// </summary>
+    public void CheckHover(float mouseX, float mouseY)
+    {
+        if (!_config.Danmaku.HoverHideEnabled)
+        {
+            lock (_lock)
+                foreach (var item in _items)
+                    item.IsHovered = false;
+            return;
+        }
+
+        lock (_lock)
+        {
+            foreach (var item in _items)
+            {
+                item.IsHovered = mouseX >= item.X
+                              && mouseX <= item.X + item.TextWidth
+                              && mouseY >= item.Y
+                              && mouseY <= item.Y + item.FontSize;
+            }
+        }
+    }
+
     private static string GetString(JsonElement el, string key)
         => el.TryGetProperty(key, out var p) ? p.GetString() ?? "" : "";
 

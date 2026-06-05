@@ -33,6 +33,11 @@ public class DanmakuItem
     /// </summary>
     public int SCPrice { get; set; }
 
+    /// <summary>
+    /// 鼠标悬停标志
+    /// </summary>
+    public bool IsHovered { get; set; }
+
     public bool IsExpired(float screenWidth)
     {
         if (IsSC)
