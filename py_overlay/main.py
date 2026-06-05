@@ -133,7 +133,7 @@ async def main():
     except KeyboardInterrupt:
         logger.info("Shutting down ...")
     finally:
-        client.stop_and_close()
+        await client.stop_and_close()
         if session is not None:
             await session.close()
         logger.info("Done")

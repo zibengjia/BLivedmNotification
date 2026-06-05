@@ -139,10 +139,12 @@ public sealed partial class OverlayWindow : Window
 
         // ─── 7b. ApplyAccent — override WinUI composition ───
         // WinUI 3's DirectComposition root visual paints opaque white.
-        // This call tells DWM to composite with per-pixel alpha, overriding
+        // This call tells DWM to force per-pixel transparency, overriding
         // whatever the WinUI composition tree outputs.
-        ApplyAccent(hwnd, ACCENT_ENABLE_ACRYLICBLURBEHIND, 0x00000000);
-        OverlayLog("Accent applied (state=4 gradient=0x00000000)");
+        // ACCENT_ENABLE_TRANSPARENTGRADIENT (state=2) gives true per-pixel alpha.
+        // Fallback: try ACCENT_ENABLE_ACRYLICBLURBEHIND (state=4) if this doesn't work.
+        int accentResult = ApplyAccent(hwnd, ACCENT_ENABLE_TRANSPARENTGRADIENT, 0x00000000);
+        OverlayLog($"Accent applied (state=2 gradient=0x00000000) result={accentResult} LastErr={Marshal.GetLastPInvokeError()}");
 
         // ─── 8. DWM — remove rounded corners & border outline ───
         uint cornerPreference = 1; // DWMWCP_DONOTROUND
@@ -276,6 +278,7 @@ public sealed partial class OverlayWindow : Window
 
     // ---- SetWindowCompositionAttribute helpers ----
     private const int WCA_ACCENT_POLICY = 19;
+    private const int ACCENT_ENABLE_TRANSPARENTGRADIENT = 2;
     private const int ACCENT_ENABLE_ACRYLICBLURBEHIND = 4;
 
     [StructLayout(LayoutKind.Sequential)]
@@ -298,8 +301,9 @@ public sealed partial class OverlayWindow : Window
     /// <summary>
     /// Override the window's composition with a per-pixel alpha accent,
     /// making the DWM ignore the opaque white from WinUI's composition tree.
+    /// Returns 0 on success, non-zero on failure.
     /// </summary>
-    private static void ApplyAccent(IntPtr hwnd, int accentState, uint gradientColor)
+    private static int ApplyAccent(IntPtr hwnd, int accentState, uint gradientColor)
     {
         var accent = new ACCENTPOLICY
         {
@@ -319,7 +323,7 @@ public sealed partial class OverlayWindow : Window
                 Data = ptr,
                 SizeOfData = size,
             };
-            SetWindowCompositionAttribute(hwnd, ref data);
+            return SetWindowCompositionAttribute(hwnd, ref data);
         }
         finally
         {
@@ -353,7 +357,7 @@ public sealed partial class OverlayWindow : Window
     [DllImport("user32.dll")]
     private static extern bool UnregisterHotKey(IntPtr hWnd, int id);
 
-    [DllImport("user32.dll")]
+    [DllImport("user32.dll", SetLastError = true)]
     private static extern int SetWindowCompositionAttribute(IntPtr hwnd, ref WINCOMPATTRDATA data);
 
     [DllImport("dwmapi.dll")]
