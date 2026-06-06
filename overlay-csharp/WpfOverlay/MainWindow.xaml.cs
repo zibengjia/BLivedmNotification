@@ -12,6 +12,8 @@ using System.Windows.Controls;
 using System.Windows.Interop;
 using Wpf.Ui.Controls;
 using Forms = System.Windows.Forms;
+using System.Windows.Markup;
+using SystemFontFamilies = System.Windows.Media.Fonts;
 
 namespace Overlay;
 
@@ -40,6 +42,9 @@ public partial class MainWindow : FluentWindow
 
         // Enumerate monitors into combo
         EnumerateMonitors();
+
+        // Populate font family combo
+        PopulateFontFamilyCombo();
 
         // Load saved settings
         LoadConfigToUI();
@@ -71,6 +76,9 @@ public partial class MainWindow : FluentWindow
         OpacitySlider.Value = _config.Danmaku.Opacity;
         TrackCountSlider.Value = _config.Danmaku.TrackCount;
 
+        // Font family
+        SelectFontFamily(_config.Danmaku.FontFamily);
+
         ScFontSizeSlider.Value = _config.SuperChat.FontSize;
         ScDurationSlider.Value = _config.SuperChat.DurationMs;
 
@@ -98,6 +106,9 @@ public partial class MainWindow : FluentWindow
         _config.Danmaku.Speed = (int)SpeedSlider.Value;
         _config.Danmaku.Opacity = (float)Math.Round(OpacitySlider.Value, 2);
         _config.Danmaku.TrackCount = (int)TrackCountSlider.Value;
+
+        // Font family
+        _config.Danmaku.FontFamily = GetFontFamilyName(FontFamilyCombo.SelectedItem);
 
         _config.SuperChat.FontSize = (int)ScFontSizeSlider.Value;
         _config.SuperChat.DurationMs = (int)ScDurationSlider.Value;
@@ -139,6 +150,130 @@ public partial class MainWindow : FluentWindow
         }
         if (DisplayCombo.Items.Count > 0)
             DisplayCombo.SelectedIndex = 0;
+    }
+
+    // Fonts known to support Chinese well — shown first with ★ prefix
+    private static readonly string[] RecommendedCjkFonts =
+    {
+        "Microsoft YaHei UI", "Microsoft YaHei",
+        "SimHei", "SimSun", "NSimSun",
+        "FangSong", "KaiTi", "DengXian",
+        "Microsoft JhengHei UI", "Microsoft JhengHei",
+        "STXihei", "STKaiti", "STSong", "STFangsong", "STZhongsong",
+        "Source Han Sans SC", "Source Han Serif SC",
+        "Noto Sans SC", "Noto Serif SC",
+        "LiSu", "YouYuan",
+    };
+
+    /// <summary>Try to get the Chinese localized name for a font family.</summary>
+    private static string? GetChineseFontName(System.Windows.Media.FontFamily family)
+    {
+        var zhLang = XmlLanguage.GetLanguage("zh-Hans");
+        foreach (var kv in family.FamilyNames)
+        {
+            if (kv.Key.IetfLanguageTag.StartsWith("zh", StringComparison.OrdinalIgnoreCase))
+                return kv.Value;
+        }
+        return null;
+    }
+
+    private void PopulateFontFamilyCombo()
+    {
+        FontFamilyCombo.Items.Clear();
+
+        var fontList = SystemFontFamilies.SystemFontFamilies.ToList();
+        var recommended = new HashSet<string>(RecommendedCjkFonts, StringComparer.OrdinalIgnoreCase);
+
+        // Add recommended Chinese fonts first (if installed)
+        var recommendedItems = fontList
+            .Where(f => recommended.Contains(f.Source))
+            .OrderBy(f => GetChineseFontName(f) ?? f.Source, StringComparer.OrdinalIgnoreCase)
+            .ToList();
+
+        foreach (var font in recommendedItems)
+        {
+            var cnName = GetChineseFontName(font) ?? font.Source;
+            var item = new ComboBoxItem
+            {
+                Content = $"★ {cnName}",
+                Tag = font.Source,
+                FontFamily = new System.Windows.Media.FontFamily(font.Source),
+            };
+            FontFamilyCombo.Items.Add(item);
+        }
+
+        // Separator
+        if (FontFamilyCombo.Items.Count > 0)
+        {
+            var sep = new ComboBoxItem
+            {
+                Content = "── 全部字体 ──",
+                IsEnabled = false,
+            };
+            FontFamilyCombo.Items.Add(sep);
+        }
+
+        // Add all other fonts (with Chinese name if available)
+        var otherFonts = fontList
+            .Where(f => !recommended.Contains(f.Source))
+            .OrderBy(f => GetChineseFontName(f) ?? f.Source, StringComparer.OrdinalIgnoreCase)
+            .ToList();
+
+        foreach (var font in otherFonts)
+        {
+            var cnName = GetChineseFontName(font);
+            var display = cnName != null && cnName != font.Source
+                ? $"{cnName} ({font.Source})"
+                : font.Source;
+
+            var item = new ComboBoxItem
+            {
+                Content = display,
+                Tag = font.Source,
+                FontFamily = new System.Windows.Media.FontFamily(font.Source),
+            };
+            FontFamilyCombo.Items.Add(item);
+        }
+
+        if (FontFamilyCombo.Items.Count > 0)
+            FontFamilyCombo.SelectedIndex = 0;
+    }
+
+    /// <summary>Extract the WPF family name (Tag) from a ComboBoxItem.</summary>
+    private static string GetFontFamilyName(object? item)
+    {
+        if (item is ComboBoxItem cbi && cbi.Tag is string tag)
+            return tag;
+        return item?.ToString() ?? "Microsoft YaHei UI";
+    }
+
+    private void SelectFontFamily(string fontFamily)
+    {
+        for (int i = 0; i < FontFamilyCombo.Items.Count; i++)
+        {
+            if (string.Equals(GetFontFamilyName(FontFamilyCombo.Items[i]), fontFamily, StringComparison.OrdinalIgnoreCase))
+            {
+                FontFamilyCombo.SelectedIndex = i;
+                return;
+            }
+        }
+        if (!string.IsNullOrEmpty(fontFamily))
+        {
+            var item = new ComboBoxItem { Content = fontFamily, Tag = fontFamily };
+            FontFamilyCombo.Items.Add(item);
+            FontFamilyCombo.SelectedIndex = FontFamilyCombo.Items.Count - 1;
+        }
+    }
+
+    private void OnFontFamilyChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (!IsLoaded) return;
+        if (FontFamilyCombo.SelectedItem is not ComboBoxItem cbi) return;
+        if (cbi.Tag is not string fontName) return;
+
+        _config.Danmaku.FontFamily = fontName;
+        _config.Save();
+        Log($"字体已切换: {fontName}");
     }
 
     // ════════════════════════════════════════════════════════════
@@ -645,7 +780,8 @@ public partial class MainWindow : FluentWindow
     {
         _trayIcon = new Forms.NotifyIcon
         {
-            Icon = System.Drawing.Icon.ExtractAssociatedIcon(Environment.ProcessPath ?? "app.exe"),
+            Icon = new System.Drawing.Icon(
+                System.Windows.Application.GetResourceStream(new Uri("pack://application:,,,/icon.ico"))!.Stream),
             Text = "BLivedm Notification",
             Visible = true,
         };

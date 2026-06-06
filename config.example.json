@@ -1,0 +1,29 @@
+{
+  "room_id": 0,
+  "display_index": 0,
+  "pipe_name": "BlivedmOverlay",
+  "sessdata": "",
+  "python_path": "",
+  "rooms": [
+    { "room_id": 27484357, "label": "主播名" }
+  ],
+  "selected_room_index": 0,
+  "danmaku": {
+    "font_family": "Microsoft YaHei UI",
+    "font_size": 28,
+    "speed": 300,
+    "opacity": 0.9,
+    "track_count": 12,
+    "font_weight": "Normal",
+    "shadow_enabled": true,
+    "shadow_opacity": 0.6,
+    "shadow_offset": 2,
+    "position_priority": "Top",
+    "density": "Medium",
+    "hover_hide_enabled": false
+  },
+  "super_chat": {
+    "font_size": 40,
+    "duration_ms": 15000
+  }
+}

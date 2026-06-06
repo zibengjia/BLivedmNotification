@@ -3,6 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
         Title="BLivedm Notification"
+        Icon="icon.ico"
         MinWidth="720" MinHeight="600"
         Width="760" Height="660"
         WindowStartupLocation="CenterScreen"
@@ -27,7 +28,11 @@
         </Grid.RowDefinitions>
 
         <!-- ══════════ Title Bar ══════════ -->
-        <ui:TitleBar Grid.Row="0" Title="BLivedm Notification" />
+        <ui:TitleBar Grid.Row="0" Title="BLivedm Notification">
+            <ui:TitleBar.Icon>
+                <ui:ImageIcon Source="icon.ico" />
+            </ui:TitleBar.Icon>
+        </ui:TitleBar>
 
         <!-- ══════════ Tab Control (config) ══════════ -->
         <TabControl Grid.Row="1" Margin="8,0,8,4">
@@ -160,6 +165,17 @@
                         <ui:Card Padding="12">
                             <StackPanel>
                                 <TextBlock Text="文字设置" FontWeight="SemiBold" Margin="0,0,0,8" />
+
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="80" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="字体：" VerticalAlignment="Center" />
+                                    <ComboBox x:Name="FontFamilyCombo" Grid.Column="1"
+                                              SelectionChanged="OnFontFamilyChanged" />
+                                </Grid>
+
                                 <Grid>
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="80" />

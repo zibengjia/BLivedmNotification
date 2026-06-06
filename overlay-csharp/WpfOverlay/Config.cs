@@ -68,6 +68,9 @@ public class Config
 
     public class DanmakuConfig
     {
+        [JsonPropertyName("font_family")]
+        public string FontFamily { get; set; } = "Microsoft YaHei UI";
+
         [JsonPropertyName("font_size")]
         public float FontSize { get; set; } = 28f;
 

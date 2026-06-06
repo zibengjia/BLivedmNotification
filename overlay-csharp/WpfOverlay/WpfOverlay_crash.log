@@ -1,23 +1,2 @@
-DISPATCHER: System.Windows.Markup.XamlParseException: “在“System.Windows.Baml2006.TypeConverterMarkupExtension”上提供值时引发了异常。”，行号为“373”，行位置为“61”。
- ---> System.FormatException: Subtle is not a valid value for ControlAppearance.
- ---> System.ArgumentException: Requested value 'Subtle' was not found.
-   at System.Enum.TryParseByName[TStorage](RuntimeType enumType, ReadOnlySpan`1 value, Boolean ignoreCase, Boolean throwOnFailure, TStorage& result)
-   at System.Enum.TryParseByValueOrName[TUnderlying,TStorage](RuntimeType enumType, ReadOnlySpan`1 value, Boolean ignoreCase, Boolean throwOnFailure, TUnderlying& result)
-   at System.Enum.TryParse(Type enumType, ReadOnlySpan`1 value, Boolean ignoreCase, Boolean throwOnFailure, Object& result)
-   at System.Enum.Parse(Type enumType, String value, Boolean ignoreCase)
-   at System.ComponentModel.EnumConverter.ConvertFrom(ITypeDescriptorContext context, CultureInfo culture, Object value)
-   --- End of inner exception stack trace ---
-   at System.ComponentModel.EnumConverter.ConvertFrom(ITypeDescriptorContext context, CultureInfo culture, Object value)
-   at MS.Internal.Xaml.Runtime.ClrObjectRuntime.CallProvideValue(MarkupExtension me, IServiceProvider serviceProvider)
-   --- End of inner exception stack trace ---
-   at System.Windows.Markup.XamlReader.RewrapException(Exception e, IXamlLineInfo lineInfo, Uri baseUri)
-   at System.Windows.Markup.WpfXamlLoader.Load(XamlReader xamlReader, IXamlObjectWriterFactory writerFactory, Boolean skipJournaledProperties, Object rootObject, XamlObjectWriterSettings settings, Uri baseUri)
-   at System.Windows.Markup.WpfXamlLoader.LoadBaml(XamlReader xamlReader, Boolean skipJournaledProperties, Object rootObject, XamlAccessLevel accessLevel, Uri baseUri)
-   at System.Windows.Markup.XamlReader.LoadBaml(Stream stream, ParserContext parserContext, Object parent, Boolean closeStream)
-   at System.Windows.Application.LoadComponent(Object component, Uri resourceLocator)
-   at Overlay.MainWindow.InitializeComponent() in C:\Users\zibj\Desktop\Project\Claude\BLivedmNotification\overlay-csharp\WpfOverlay\MainWindow.xaml:line 1
-   at Overlay.MainWindow..ctor() in C:\Users\zibj\Desktop\Project\Claude\BLivedmNotification\overlay-csharp\WpfOverlay\MainWindow.xaml.cs:line 30
-   at Overlay.App.OnStartup(StartupEventArgs e) in C:\Users\zibj\Desktop\Project\Claude\BLivedmNotification\overlay-csharp\WpfOverlay\App.xaml.cs:line 54
-   at System.Windows.Application.<.ctor>b__1_0(Object unused)
-   at System.Windows.Threading.ExceptionWrapper.InternalRealCall(Delegate callback, Object args, Int32 numArgs)
-   at System.Windows.Threading.ExceptionWrapper.TryCatchWhen(Object source, Delegate callback, Object args, Int32 numArgs, Delegate catchHandler)
+ARGS: [] count=0
+Starting in LAUNCHER mode

@@ -160,7 +160,7 @@ public class DanmakuRenderer : FrameworkElement
             text,
             CultureInfo.CurrentCulture,
             System.Windows.FlowDirection.LeftToRight,
-            new Typeface(new FontFamily("Microsoft YaHei UI"), FontStyles.Normal, _fontWeight, FontStretches.Normal),
+            new Typeface(new FontFamily(_config.Danmaku.FontFamily), FontStyles.Normal, _fontWeight, FontStretches.Normal),
             fontSize,
             foreground,
             VisualTreeHelper.GetDpi(Application.Current.MainWindow).PixelsPerDip);

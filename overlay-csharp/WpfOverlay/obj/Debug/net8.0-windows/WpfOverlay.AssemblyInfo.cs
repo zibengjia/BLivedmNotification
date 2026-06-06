@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("WpfOverlay")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+9aa657cbe38feff65bc1918282b85a6bebe7a74b")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+1ccafa47898e15d8d9daef501f45c0180e185dd8")]
 [assembly: System.Reflection.AssemblyProductAttribute("WpfOverlay")]
 [assembly: System.Reflection.AssemblyTitleAttribute("WpfOverlay")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
