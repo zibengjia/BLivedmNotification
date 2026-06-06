@@ -1,5 +1,5 @@
 {
-  "room_id": 27484357,
+  "room_id": 510,
   "display_index": 0,
   "pipe_name": "BlivedmOverlay",
   "sessdata": "dedecfa4%2C1791691681%2C15798%2A41CjCXfGWgjsKvLe8XA2vDYMHY4e2kvFBiKF5wchKCIoLA54sXFrxqxCkbK4y-RXKiDdoSVnk3eDE0dmpDdnprNmYyUzJSYVlvN01HSTZDdFBVbkFjVmd0b3M1Ti1YZGttRTBNeTItY01LS1lWRDVRYXhKcGlDcmMyMmszWnRiM25nT1ZEZDdDeGFRIIEC",
@@ -31,7 +31,17 @@
       "room_id": 4350043,
       "label": "\u4E00\u7C73\u516B\u7684\u5764\u513F",
       "DisplayText": "\u4E00\u7C73\u516B\u7684\u5764\u513F (4350043)"
+    },
+    {
+      "room_id": 13233348,
+      "label": "\u64B8sir\u5170\u9675\u541B",
+      "DisplayText": "\u64B8sir\u5170\u9675\u541B (13233348)"
+    },
+    {
+      "room_id": 80397,
+      "label": "\u963F\u6893\u4ECE\u5C0F\u5C31\u5F88\u53EF\u7231",
+      "DisplayText": "\u963F\u6893\u4ECE\u5C0F\u5C31\u5F88\u53EF\u7231 (80397)"
     }
   ],
-  "selected_room_index": 0
+  "selected_room_index": 3
 }

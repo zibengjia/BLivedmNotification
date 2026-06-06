@@ -118,7 +118,7 @@ public class DanmakuEngine
             }
             // Clamp to SC zone
             item.Y = Math.Min(scY, ScZoneHeight - item.FontSize);
-            item.X = ScreenWidth;
+            item.X = 4f; // Stationary at left edge (SC duration-based, doesn't scroll)
             _items.Add(item);
         }
     }
