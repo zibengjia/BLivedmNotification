@@ -17,6 +17,89 @@
                 <ui:ThemesDictionary Theme="Light" />
                 <ui:ControlsDictionary />
             </ResourceDictionary.MergedDictionaries>
+
+            <!-- ── Shared styles ──────────────────────────────────── -->
+
+            <!-- Section header with accent bar -->
+            <Style x:Key="SectionHeader" TargetType="StackPanel">
+                <Setter Property="Orientation" Value="Horizontal" />
+                <Setter Property="Margin" Value="0,0,0,10" />
+            </Style>
+
+            <Style x:Key="AccentBar" TargetType="Border">
+                <Setter Property="Width" Value="3" />
+                <Setter Property="Height" Value="16" />
+                <Setter Property="CornerRadius" Value="2" />
+                <Setter Property="Background">
+                    <Setter.Value>
+                        <SolidColorBrush Color="#0078D4" />
+                    </Setter.Value>
+                </Setter>
+                <Setter Property="Margin" Value="0,0,8,0" />
+                <Setter Property="VerticalAlignment" Value="Center" />
+            </Style>
+
+            <Style x:Key="SectionTitle" TargetType="TextBlock">
+                <Setter Property="FontWeight" Value="SemiBold" />
+                <Setter Property="FontSize" Value="13" />
+                <Setter Property="VerticalAlignment" Value="Center" />
+            </Style>
+
+            <!-- Slider value badge -->
+            <Style x:Key="ValueBadge" TargetType="Border">
+                <Setter Property="CornerRadius" Value="4" />
+                <Setter Property="Padding" Value="8,2" />
+                <Setter Property="MinWidth" Value="50" />
+                <Setter Property="VerticalAlignment" Value="Center" />
+                <Setter Property="HorizontalAlignment" Value="Right" />
+                <Setter Property="Background">
+                    <Setter.Value>
+                        <SolidColorBrush Color="#F3F3F3" />
+                    </Setter.Value>
+                </Setter>
+            </Style>
+
+            <Style x:Key="ValueBadgeText" TargetType="TextBlock">
+                <Setter Property="TextAlignment" Value="Center" />
+                <Setter Property="FontFamily" Value="Cascadia Code, Consolas, monospace" />
+                <Setter Property="FontSize" Value="12" />
+                <Setter Property="FontWeight" Value="Medium" />
+                <Setter Property="Foreground">
+                    <Setter.Value>
+                        <SolidColorBrush Color="#0078D4" />
+                    </Setter.Value>
+                </Setter>
+                <Setter Property="VerticalAlignment" Value="Center" />
+            </Style>
+
+            <!-- Setting row label -->
+            <Style x:Key="RowLabel" TargetType="TextBlock">
+                <Setter Property="VerticalAlignment" Value="Center" />
+                <Setter Property="FontSize" Value="12.5" />
+                <Setter Property="Foreground">
+                    <Setter.Value>
+                        <SolidColorBrush Color="#555555" />
+                    </Setter.Value>
+                </Setter>
+            </Style>
+
+            <!-- Hint text -->
+            <Style x:Key="HintText" TargetType="TextBlock">
+                <Setter Property="TextWrapping" Value="Wrap" />
+                <Setter Property="FontSize" Value="11" />
+                <Setter Property="Margin" Value="0,6,0,0" />
+                <Setter Property="Foreground">
+                    <Setter.Value>
+                        <SolidColorBrush Color="#888888" />
+                    </Setter.Value>
+                </Setter>
+            </Style>
+
+            <!-- Card spacing -->
+            <Style x:Key="SettingsCard" TargetType="ui:Card">
+                <Setter Property="Padding" Value="16,14" />
+                <Setter Property="Margin" Value="0,0,0,8" />
+            </Style>
         </ResourceDictionary>
     </Window.Resources>
 
@@ -39,32 +122,35 @@
             <!-- ── Tab 1: 基本设置 ── -->
             <TabItem Header="基本设置">
                 <ScrollViewer VerticalScrollBarVisibility="Auto">
-                    <StackPanel Margin="8">
-                        <ui:Card Margin="0,0,0,0" Padding="12">
+                    <StackPanel Margin="12,8,12,8">
+                        <ui:Card Style="{StaticResource SettingsCard}">
                             <StackPanel>
-                                <TextBlock Text="连接设置" FontWeight="SemiBold" Margin="0,0,0,8" />
+                                <StackPanel Style="{StaticResource SectionHeader}">
+                                    <Border Style="{StaticResource AccentBar}" />
+                                    <TextBlock Text="连接设置" Style="{StaticResource SectionTitle}" />
+                                </StackPanel>
 
                                 <!-- Pipe Name -->
-                                <Grid>
+                                <Grid Margin="0,0,0,6">
                                     <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="100" />
+                                        <ColumnDefinition Width="90" />
                                         <ColumnDefinition Width="*" />
                                     </Grid.ColumnDefinitions>
-                                    <TextBlock Text="Pipe 名称：" VerticalAlignment="Center" />
+                                    <TextBlock Text="Pipe 名称" Style="{StaticResource RowLabel}" />
                                     <TextBox x:Name="PipeNameBox" Grid.Column="1" Text="BlivedmOverlay" />
                                 </Grid>
 
                                 <!-- SESSDATA -->
-                                <Grid>
+                                <Grid Margin="0,0,0,6">
                                     <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="100" />
+                                        <ColumnDefinition Width="90" />
                                         <ColumnDefinition Width="*" />
                                         <ColumnDefinition Width="Auto" />
                                     </Grid.ColumnDefinitions>
-                                    <TextBlock Text="SESSDATA：" VerticalAlignment="Center" />
+                                    <TextBlock Text="SESSDATA" Style="{StaticResource RowLabel}" />
                                     <PasswordBox x:Name="SessdataBox" Grid.Column="1" />
                                     <CheckBox x:Name="ShowSessdataCheck" Grid.Column="2"
-                                              Content="显示" Margin="4,0,0,0"
+                                              Content="显示" Margin="8,0,0,0"
                                               VerticalAlignment="Center"
                                               Checked="OnShowSessdata" Unchecked="OnShowSessdata" />
                                 </Grid>
@@ -72,34 +158,36 @@
                                 <!-- Display -->
                                 <Grid>
                                     <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="100" />
+                                        <ColumnDefinition Width="90" />
                                         <ColumnDefinition Width="*" />
                                     </Grid.ColumnDefinitions>
-                                    <TextBlock Text="显示器：" VerticalAlignment="Center" />
+                                    <TextBlock Text="显示器" Style="{StaticResource RowLabel}" />
                                     <ComboBox x:Name="DisplayCombo" Grid.Column="1" />
                                 </Grid>
                             </StackPanel>
                         </ui:Card>
 
-                        <ui:Card Padding="12">
+                        <ui:Card Style="{StaticResource SettingsCard}">
                             <StackPanel>
-                                <TextBlock Text="Python 设置" FontWeight="SemiBold" Margin="0,0,0,8" />
-                                <Grid>
+                                <StackPanel Style="{StaticResource SectionHeader}">
+                                    <Border Style="{StaticResource AccentBar}" />
+                                    <TextBlock Text="Python 设置" Style="{StaticResource SectionTitle}" />
+                                </StackPanel>
+
+                                <Grid Margin="0,0,0,4">
                                     <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="100" />
+                                        <ColumnDefinition Width="90" />
                                         <ColumnDefinition Width="*" />
                                         <ColumnDefinition Width="Auto" />
                                     </Grid.ColumnDefinitions>
-                                    <TextBlock Text="Python 路径：" VerticalAlignment="Center" />
+                                    <TextBlock Text="Python 路径" Style="{StaticResource RowLabel}" />
                                     <TextBox x:Name="PythonPathBox" Grid.Column="1" Text="python" />
                                     <ui:Button Grid.Column="2" Content="浏览"
-                                               Icon="{ui:SymbolIcon FolderOpen24}" Margin="4,0,0,0"
+                                               Icon="{ui:SymbolIcon FolderOpen24}" Margin="8,0,0,0"
                                                Click="OnBrowsePython" />
                                 </Grid>
-                                <TextBlock TextWrapping="Wrap"
-                                           Text="提示：用于运行 py_overlay/main.py（B站弹幕后端）。留空则自动检测：项目 .venv → uv.exe → 系统 PATH 中的 python。指定路径可固定使用特定环境（如 pyenv、conda）。修改后需点击「保存配置」。"
-                                           Foreground="{ui:ThemeResource TextFillColorSecondaryBrush}"
-                                           FontSize="11" />
+                                <TextBlock Style="{StaticResource HintText}"
+                                           Text="用于运行弹幕后端 (py_overlay/main.py)。留空自动检测：项目 .venv → uv.exe → 系统 python。" />
                             </StackPanel>
                         </ui:Card>
                     </StackPanel>
@@ -108,94 +196,142 @@
 
             <!-- ── Tab 2: 房间 ── -->
             <TabItem Header="房间">
-                <ScrollViewer VerticalScrollBarVisibility="Auto">
-                    <StackPanel Margin="8">
-                        <ui:Card Padding="12">
-                            <StackPanel>
-                                <TextBlock Text="房间列表" FontWeight="SemiBold" Margin="0,0,0,8" />
-                                <ListBox x:Name="RoomListBox" Height="150"
+                <ScrollViewer x:Name="RoomScrollViewer" VerticalScrollBarVisibility="Auto">
+                    <Grid Margin="12,8,12,8"
+                          MinHeight="{Binding ViewportHeight, ElementName=RoomScrollViewer}">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="5*" MinHeight="120" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="3*" MinHeight="100" />
+                        </Grid.RowDefinitions>
+
+                    <!-- Room list card (resizable) -->
+                    <ui:Card Grid.Row="0" Padding="16,14" Margin="0,0,0,0">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="*" />
+                            </Grid.RowDefinitions>
+
+                            <StackPanel Grid.Row="0" Style="{StaticResource SectionHeader}">
+                                <Border Style="{StaticResource AccentBar}" />
+                                <TextBlock Text="房间列表" Style="{StaticResource SectionTitle}" />
+                            </StackPanel>
+
+                            <Border Grid.Row="1" CornerRadius="6" Padding="0"
+                                    BorderThickness="1"
+                                    BorderBrush="{ui:ThemeResource DividerStrokeColorDefaultBrush}">
+                                <ListBox x:Name="RoomListBox"
+                                         BorderThickness="0"
                                          SelectionChanged="OnRoomSelectionChanged" />
-                                <Grid Margin="0,4,0,0">
+                            </Border>
+                        </Grid>
+                    </ui:Card>
+
+                    <!-- GridSplitter between room list and controls -->
+                    <GridSplitter Grid.Row="1" Height="6" HorizontalAlignment="Stretch"
+                                  Margin="0,2"
+                                  Background="{ui:ThemeResource DividerStrokeColorDefaultBrush}"
+                                  ResizeBehavior="PreviousAndNext"
+                                  ResizeDirection="Rows" />
+
+                    <!-- Controls + remark card (bottom section) -->
+                    <StackPanel Grid.Row="2">
+                        <!-- Room action buttons -->
+                        <ui:Card Padding="16,14" Margin="0,0,0,8">
+                            <StackPanel>
+                                <Grid>
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="*" />
                                         <ColumnDefinition Width="Auto" />
                                     </Grid.ColumnDefinitions>
                                     <ui:NumberBox x:Name="NewRoomIdBox" Grid.Column="0"
                                                   PlaceholderText="输入房间号添加" Minimum="1" Maximum="99999999" />
-                                    <StackPanel Grid.Column="1" Orientation="Horizontal" Margin="4,0,0,0">
+                                    <StackPanel Grid.Column="1" Orientation="Horizontal" Margin="8,0,0,0">
                                         <ui:Button Content="添加" Click="OnAddRoom" />
-                                        <ui:Button Content="获取名称" Click="OnFetchRoomName" Margin="4,0" Appearance="Secondary" />
+                                        <ui:Button Content="获取名称" Click="OnFetchRoomName" Margin="6,0" Appearance="Secondary" />
+                                        <ui:Button Content="刷新状态" Click="OnRefreshLiveStatus" Margin="0,0,6,0"
+                                                   Icon="{ui:SymbolIcon ArrowSync24}" Appearance="Info" />
                                         <ui:Button Content="删除" Click="OnRemoveRoom" Appearance="Danger" />
                                     </StackPanel>
                                 </Grid>
-                                <TextBlock Text="提示：点击列表中的房间可切换弹幕来源。切换后后端会自动重启。"
-                                           Foreground="{ui:ThemeResource TextFillColorSecondaryBrush}"
-                                           FontSize="11" Margin="0,2,0,4" />
+                                <TextBlock Style="{StaticResource HintText}"
+                                           Text="点击列表中的房间可切换弹幕来源，切换后后端自动重启。直播状态每 1 分钟自动刷新。" />
                             </StackPanel>
                         </ui:Card>
 
-                        <ui:Card Padding="12">
+                        <!-- Room remark card -->
+                        <ui:Card Padding="16,14">
                             <StackPanel>
-                                <TextBlock Text="房间备注" FontWeight="SemiBold" Margin="0,0,0,8" />
-                                <Grid>
+                                <StackPanel Style="{StaticResource SectionHeader}">
+                                    <Border Style="{StaticResource AccentBar}" />
+                                    <TextBlock Text="房间备注" Style="{StaticResource SectionTitle}" />
+                                </StackPanel>
+
+                                <Grid Margin="0,0,0,4">
                                     <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="60" />
+                                        <ColumnDefinition Width="70" />
                                         <ColumnDefinition Width="*" />
                                         <ColumnDefinition Width="Auto" />
                                     </Grid.ColumnDefinitions>
-                                    <TextBlock Text="备注名：" VerticalAlignment="Center" />
+                                    <TextBlock Text="备注名" Style="{StaticResource RowLabel}" />
                                     <TextBox x:Name="RoomLabelBox" Grid.Column="1" Text="" />
-                                    <ui:Button Grid.Column="2" Content="保存备注" Margin="4,0,0,0"
+                                    <ui:Button Grid.Column="2" Content="保存备注" Margin="8,0,0,0"
                                                Click="OnSaveRoomLabel" />
                                 </Grid>
-                                <TextBlock Text="可自定义房间显示名称。点击「获取名称」自动从 B站 拉取主播名填入。"
-                                           Foreground="{ui:ThemeResource TextFillColorSecondaryBrush}"
-                                           FontSize="11" Margin="0,4,0,0" />
+                                <TextBlock Style="{StaticResource HintText}"
+                                           Text="自定义房间显示名称。点击「获取名称」自动从 B站 拉取主播名。" />
                             </StackPanel>
                         </ui:Card>
                     </StackPanel>
+                </Grid>
                 </ScrollViewer>
             </TabItem>
 
             <!-- ── Tab 3: 弹幕设置 ── -->
             <TabItem Header="弹幕设置">
                 <ScrollViewer VerticalScrollBarVisibility="Auto">
-                    <StackPanel Margin="8">
-                        <!-- Text Settings -->
-                        <ui:Card Padding="12">
-                            <StackPanel>
-                                <TextBlock Text="文字设置" FontWeight="SemiBold" Margin="0,0,0,8" />
+                    <StackPanel Margin="12,8,12,8">
 
-                                <Grid>
+                        <!-- ── Text Settings ── -->
+                        <ui:Card Style="{StaticResource SettingsCard}">
+                            <StackPanel>
+                                <StackPanel Style="{StaticResource SectionHeader}">
+                                    <Border Style="{StaticResource AccentBar}" />
+                                    <TextBlock Text="文字设置" Style="{StaticResource SectionTitle}" />
+                                </StackPanel>
+
+                                <Grid Margin="0,0,0,6">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="80" />
                                         <ColumnDefinition Width="*" />
                                     </Grid.ColumnDefinitions>
-                                    <TextBlock Text="字体：" VerticalAlignment="Center" />
+                                    <TextBlock Text="字体" Style="{StaticResource RowLabel}" />
                                     <ComboBox x:Name="FontFamilyCombo" Grid.Column="1"
                                               SelectionChanged="OnFontFamilyChanged" />
                                 </Grid>
 
-                                <Grid>
+                                <Grid Margin="0,0,0,6">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="80" />
                                         <ColumnDefinition Width="*" />
-                                        <ColumnDefinition Width="60" />
+                                        <ColumnDefinition Width="65" />
                                     </Grid.ColumnDefinitions>
-                                    <TextBlock Text="字号：" VerticalAlignment="Center" />
+                                    <TextBlock Text="字号" Style="{StaticResource RowLabel}" />
                                     <Slider x:Name="FontSizeSlider" Grid.Column="1"
                                             Minimum="12" Maximum="48" TickFrequency="1"
                                             ValueChanged="OnDanmakuPreviewChanged" />
-                                    <TextBlock x:Name="FontSizeLabel" Grid.Column="2"
-                                               Text="21" TextAlignment="Right" VerticalAlignment="Center" />
+                                    <Border Grid.Column="2" Style="{StaticResource ValueBadge}">
+                                        <TextBlock x:Name="FontSizeLabel" Text="21" Style="{StaticResource ValueBadgeText}" />
+                                    </Border>
                                 </Grid>
 
-                                <Grid>
+                                <Grid Margin="0,0,0,6">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="80" />
                                         <ColumnDefinition Width="*" />
                                     </Grid.ColumnDefinitions>
-                                    <TextBlock Text="字体粗细：" VerticalAlignment="Center" />
+                                    <TextBlock Text="字体粗细" Style="{StaticResource RowLabel}" />
                                     <ComboBox x:Name="FontWeightCombo" Grid.Column="1">
                                         <ComboBoxItem>Normal</ComboBoxItem>
                                         <ComboBoxItem>Light</ComboBoxItem>
@@ -205,60 +341,67 @@
                                     </ComboBox>
                                 </Grid>
 
-                                <Grid>
+                                <Grid Margin="0,0,0,6">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="80" />
                                         <ColumnDefinition Width="*" />
-                                        <ColumnDefinition Width="60" />
+                                        <ColumnDefinition Width="65" />
                                     </Grid.ColumnDefinitions>
-                                    <TextBlock Text="速度：" VerticalAlignment="Center" />
+                                    <TextBlock Text="速度" Style="{StaticResource RowLabel}" />
                                     <Slider x:Name="SpeedSlider" Grid.Column="1"
                                             Minimum="50" Maximum="500" TickFrequency="10"
                                             ValueChanged="OnDanmakuPreviewChanged" />
-                                    <TextBlock x:Name="SpeedLabel" Grid.Column="2"
-                                               Text="300" TextAlignment="Right" VerticalAlignment="Center" />
+                                    <Border Grid.Column="2" Style="{StaticResource ValueBadge}">
+                                        <TextBlock x:Name="SpeedLabel" Text="300" Style="{StaticResource ValueBadgeText}" />
+                                    </Border>
                                 </Grid>
 
                                 <Grid>
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="80" />
                                         <ColumnDefinition Width="*" />
-                                        <ColumnDefinition Width="60" />
+                                        <ColumnDefinition Width="65" />
                                     </Grid.ColumnDefinitions>
-                                    <TextBlock Text="不透明度：" VerticalAlignment="Center" />
+                                    <TextBlock Text="不透明度" Style="{StaticResource RowLabel}" />
                                     <Slider x:Name="OpacitySlider" Grid.Column="1"
                                             Minimum="0.1" Maximum="1.0" TickFrequency="0.05"
                                             ValueChanged="OnDanmakuPreviewChanged" />
-                                    <TextBlock x:Name="OpacityLabel" Grid.Column="2"
-                                               Text="0.90" TextAlignment="Right" VerticalAlignment="Center" />
+                                    <Border Grid.Column="2" Style="{StaticResource ValueBadge}">
+                                        <TextBlock x:Name="OpacityLabel" Text="0.90" Style="{StaticResource ValueBadgeText}" />
+                                    </Border>
                                 </Grid>
                             </StackPanel>
                         </ui:Card>
 
-                        <!-- Track Settings -->
-                        <ui:Card Padding="12">
+                        <!-- ── Track Settings ── -->
+                        <ui:Card Style="{StaticResource SettingsCard}">
                             <StackPanel>
-                                <TextBlock Text="轨道设置" FontWeight="SemiBold" Margin="0,0,0,8" />
-                                <Grid>
+                                <StackPanel Style="{StaticResource SectionHeader}">
+                                    <Border Style="{StaticResource AccentBar}" />
+                                    <TextBlock Text="轨道设置" Style="{StaticResource SectionTitle}" />
+                                </StackPanel>
+
+                                <Grid Margin="0,0,0,6">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="80" />
                                         <ColumnDefinition Width="*" />
-                                        <ColumnDefinition Width="60" />
+                                        <ColumnDefinition Width="65" />
                                     </Grid.ColumnDefinitions>
-                                    <TextBlock Text="轨道数：" VerticalAlignment="Center" />
+                                    <TextBlock Text="轨道数" Style="{StaticResource RowLabel}" />
                                     <Slider x:Name="TrackCountSlider" Grid.Column="1"
                                             Minimum="4" Maximum="24" TickFrequency="1"
                                             ValueChanged="OnDanmakuPreviewChanged" />
-                                    <TextBlock x:Name="TrackCountLabel" Grid.Column="2"
-                                               Text="12" TextAlignment="Right" VerticalAlignment="Center" />
+                                    <Border Grid.Column="2" Style="{StaticResource ValueBadge}">
+                                        <TextBlock x:Name="TrackCountLabel" Text="12" Style="{StaticResource ValueBadgeText}" />
+                                    </Border>
                                 </Grid>
 
-                                <Grid>
+                                <Grid Margin="0,0,0,6">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="80" />
                                         <ColumnDefinition Width="*" />
                                     </Grid.ColumnDefinitions>
-                                    <TextBlock Text="出现位置：" VerticalAlignment="Center" />
+                                    <TextBlock Text="出现位置" Style="{StaticResource RowLabel}" />
                                     <ComboBox x:Name="PositionPriorityCombo" Grid.Column="1"
                                               SelectedIndex="0">
                                         <ComboBoxItem>Top</ComboBoxItem>
@@ -272,7 +415,7 @@
                                         <ColumnDefinition Width="80" />
                                         <ColumnDefinition Width="*" />
                                     </Grid.ColumnDefinitions>
-                                    <TextBlock Text="弹幕密度：" VerticalAlignment="Center" />
+                                    <TextBlock Text="弹幕密度" Style="{StaticResource RowLabel}" />
                                     <ComboBox x:Name="DensityCombo" Grid.Column="1"
                                               SelectedIndex="1">
                                         <ComboBoxItem>Low</ComboBoxItem>
@@ -283,69 +426,78 @@
                             </StackPanel>
                         </ui:Card>
 
-                        <!-- Shadow Settings -->
-                        <ui:Card Padding="12">
+                        <!-- ── Shadow Settings ── -->
+                        <ui:Card Style="{StaticResource SettingsCard}">
                             <StackPanel>
-                                <TextBlock Text="阴影设置" FontWeight="SemiBold" Margin="0,0,0,8" />
-                                <Grid>
+                                <StackPanel Style="{StaticResource SectionHeader}">
+                                    <Border Style="{StaticResource AccentBar}" />
+                                    <TextBlock Text="阴影设置" Style="{StaticResource SectionTitle}" />
+                                </StackPanel>
+
+                                <Grid Margin="0,0,0,6">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="80" />
                                         <ColumnDefinition Width="*" />
                                     </Grid.ColumnDefinitions>
-                                    <TextBlock Text="阴影：" VerticalAlignment="Center" />
+                                    <TextBlock Text="阴影" Style="{StaticResource RowLabel}" />
                                     <ui:ToggleSwitch x:Name="ShadowEnabledToggle" Grid.Column="1"
                                                      Content="启用阴影"
                                                      Checked="OnShadowToggled" Unchecked="OnShadowToggled" />
                                 </Grid>
 
-                                <Grid>
+                                <Grid Margin="0,0,0,6">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="80" />
                                         <ColumnDefinition Width="*" />
-                                        <ColumnDefinition Width="60" />
+                                        <ColumnDefinition Width="65" />
                                     </Grid.ColumnDefinitions>
-                                    <TextBlock Text="不透明度：" VerticalAlignment="Center" />
+                                    <TextBlock Text="不透明度" Style="{StaticResource RowLabel}" />
                                     <Slider x:Name="ShadowOpacitySlider" Grid.Column="1"
                                             Minimum="0.0" Maximum="1.0" TickFrequency="0.05"
                                             ValueChanged="OnDanmakuPreviewChanged"
                                             IsEnabled="{Binding IsChecked, ElementName=ShadowEnabledToggle}" />
-                                    <TextBlock x:Name="ShadowOpacityLabel" Grid.Column="2"
-                                               Text="0.60" TextAlignment="Right" VerticalAlignment="Center" />
+                                    <Border Grid.Column="2" Style="{StaticResource ValueBadge}">
+                                        <TextBlock x:Name="ShadowOpacityLabel" Text="0.60" Style="{StaticResource ValueBadgeText}" />
+                                    </Border>
                                 </Grid>
 
                                 <Grid>
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="80" />
                                         <ColumnDefinition Width="*" />
-                                        <ColumnDefinition Width="60" />
+                                        <ColumnDefinition Width="65" />
                                     </Grid.ColumnDefinitions>
-                                    <TextBlock Text="偏移量：" VerticalAlignment="Center" />
+                                    <TextBlock Text="偏移量" Style="{StaticResource RowLabel}" />
                                     <Slider x:Name="ShadowOffsetSlider" Grid.Column="1"
                                             Minimum="0.0" Maximum="8.0" TickFrequency="0.5"
                                             ValueChanged="OnDanmakuPreviewChanged"
                                             IsEnabled="{Binding IsChecked, ElementName=ShadowEnabledToggle}" />
-                                    <TextBlock x:Name="ShadowOffsetLabel" Grid.Column="2"
-                                               Text="2.0" TextAlignment="Right" VerticalAlignment="Center" />
+                                    <Border Grid.Column="2" Style="{StaticResource ValueBadge}">
+                                        <TextBlock x:Name="ShadowOffsetLabel" Text="2.0" Style="{StaticResource ValueBadgeText}" />
+                                    </Border>
                                 </Grid>
                             </StackPanel>
                         </ui:Card>
 
-                        <!-- 鼠标悬停设置 -->
-                        <ui:Card Padding="12">
+                        <!-- ── Hover Settings ── -->
+                        <ui:Card Style="{StaticResource SettingsCard}">
                             <StackPanel>
-                                <TextBlock Text="鼠标悬停设置" FontWeight="SemiBold" Margin="0,0,0,8" />
-                                <Grid>
+                                <StackPanel Style="{StaticResource SectionHeader}">
+                                    <Border Style="{StaticResource AccentBar}" />
+                                    <TextBlock Text="鼠标悬停" Style="{StaticResource SectionTitle}" />
+                                </StackPanel>
+
+                                <Grid Margin="0,0,0,2">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="80" />
                                         <ColumnDefinition Width="*" />
                                     </Grid.ColumnDefinitions>
-                                    <TextBlock Text="悬停隐藏：" VerticalAlignment="Center" />
+                                    <TextBlock Text="悬停隐藏" Style="{StaticResource RowLabel}" />
                                     <ui:ToggleSwitch x:Name="HoverHideToggle" Grid.Column="1"
                                                      Content="鼠标移到弹幕上时隐藏该弹幕" />
                                 </Grid>
-                                <TextBlock Text="提示：覆盖层默认穿透鼠标事件，通过系统级鼠标坐标检测实现。"
-                                           Foreground="{ui:ThemeResource TextFillColorSecondaryBrush}"
-                                           FontSize="11" />
+                                <TextBlock Style="{StaticResource HintText}"
+                                           Text="覆盖层默认穿透鼠标事件，通过系统级鼠标坐标检测实现。" />
                             </StackPanel>
                         </ui:Card>
                     </StackPanel>
@@ -355,22 +507,31 @@
             <!-- ── Tab 4: 醒目留言 ── -->
             <TabItem Header="醒目留言">
                 <ScrollViewer VerticalScrollBarVisibility="Auto">
-                    <StackPanel Margin="8">
-                        <ui:Card Padding="12">
+                    <StackPanel Margin="12,8,12,8">
+                        <ui:Card Style="{StaticResource SettingsCard}">
                             <StackPanel>
-                                <TextBlock Text="醒目留言设置" FontWeight="SemiBold" Margin="0,0,0,8" />
-                                <Grid>
+                                <StackPanel Style="{StaticResource SectionHeader}">
+                                    <Border Style="{StaticResource AccentBar}">
+                                        <Border.Background>
+                                            <SolidColorBrush Color="#FFB900" />
+                                        </Border.Background>
+                                    </Border>
+                                    <TextBlock Text="醒目留言设置" Style="{StaticResource SectionTitle}" />
+                                </StackPanel>
+
+                                <Grid Margin="0,0,0,6">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="80" />
                                         <ColumnDefinition Width="*" />
-                                        <ColumnDefinition Width="60" />
+                                        <ColumnDefinition Width="65" />
                                     </Grid.ColumnDefinitions>
-                                    <TextBlock Text="字号：" VerticalAlignment="Center" />
+                                    <TextBlock Text="字号" Style="{StaticResource RowLabel}" />
                                     <Slider x:Name="ScFontSizeSlider" Grid.Column="1"
                                             Minimum="24" Maximum="72" TickFrequency="2"
                                             ValueChanged="OnDanmakuPreviewChanged" />
-                                    <TextBlock x:Name="ScFontSizeLabel" Grid.Column="2"
-                                               Text="40" TextAlignment="Right" VerticalAlignment="Center" />
+                                    <Border Grid.Column="2" Style="{StaticResource ValueBadge}">
+                                        <TextBlock x:Name="ScFontSizeLabel" Text="40" Style="{StaticResource ValueBadgeText}" />
+                                    </Border>
                                 </Grid>
 
                                 <Grid>
@@ -379,12 +540,13 @@
                                         <ColumnDefinition Width="*" />
                                         <ColumnDefinition Width="80" />
                                     </Grid.ColumnDefinitions>
-                                    <TextBlock Text="持续：" VerticalAlignment="Center" />
+                                    <TextBlock Text="持续时间" Style="{StaticResource RowLabel}" />
                                     <Slider x:Name="ScDurationSlider" Grid.Column="1"
                                             Minimum="5000" Maximum="30000" TickFrequency="500"
                                             ValueChanged="OnDanmakuPreviewChanged" />
-                                    <TextBlock x:Name="ScDurationLabel" Grid.Column="2"
-                                               Text="15000 ms" TextAlignment="Right" VerticalAlignment="Center" />
+                                    <Border Grid.Column="2" Style="{StaticResource ValueBadge}">
+                                        <TextBlock x:Name="ScDurationLabel" Text="15000 ms" Style="{StaticResource ValueBadgeText}" />
+                                    </Border>
                                 </Grid>
                             </StackPanel>
                         </ui:Card>
@@ -453,26 +615,28 @@
         </TabControl>
 
         <!-- ══════════ Status Bar ══════════ -->
-        <Border Grid.Row="2" Padding="8,4"
+        <Border Grid.Row="2" Padding="12,6"
                 BorderThickness="0,1,0,0"
                 BorderBrush="{ui:ThemeResource DividerStrokeColorDefaultBrush}"
                 Background="{ui:ThemeResource ControlFillColorDefaultBrush}">
             <StackPanel Orientation="Horizontal">
-                <TextBlock x:Name="BackendStatus" FontSize="14" VerticalAlignment="Center">○ 后端</TextBlock>
+                <TextBlock x:Name="BackendStatus" FontSize="13" VerticalAlignment="Center"
+                           Foreground="{ui:ThemeResource TextFillColorSecondaryBrush}">○ 后端</TextBlock>
                 <ui:Button x:Name="StartBackendBtn" Content="启动后端" Icon="{ui:SymbolIcon Play24}"
-                           Click="OnStartBackend" Margin="6,0" />
+                           Click="OnStartBackend" Margin="8,0" />
                 <ui:Button x:Name="StopBackendBtn" Content="停止后端" Icon="{ui:SymbolIcon Stop24}"
-                           Click="OnStopBackend" Margin="0,0,12,0" IsEnabled="False"
+                           Click="OnStopBackend" Margin="0,0,16,0" IsEnabled="False"
                            Appearance="Danger" />
 
-                <TextBlock x:Name="OverlayStatus" FontSize="14" VerticalAlignment="Center">○ 覆盖层</TextBlock>
+                <TextBlock x:Name="OverlayStatus" FontSize="13" VerticalAlignment="Center"
+                           Foreground="{ui:ThemeResource TextFillColorSecondaryBrush}">○ 覆盖层</TextBlock>
                 <ui:Button x:Name="ShowOverlayBtn" Content="显示" Icon="{ui:SymbolIcon Eye24}"
-                           Click="OnShowOverlay" Margin="6,0" />
+                           Click="OnShowOverlay" Margin="8,0" />
                 <ui:Button x:Name="HideOverlayBtn" Content="隐藏" Icon="{ui:SymbolIcon EyeOff24}"
-                           Click="OnHideOverlay" Margin="0,0,12,0" IsEnabled="False" />
+                           Click="OnHideOverlay" Margin="0,0,16,0" IsEnabled="False" />
 
                 <ui:Button x:Name="StartAllBtn" Content="全部启动" Icon="{ui:SymbolIcon Play24}"
-                           Click="OnStartAll" Margin="6,0" Appearance="Primary" />
+                           Click="OnStartAll" Margin="8,0" />
                 <ui:Button x:Name="StopAllBtn" Content="全部停止" Icon="{ui:SymbolIcon Stop24}"
                            Click="OnStopAll" IsEnabled="False" Appearance="Danger" />
             </StackPanel>

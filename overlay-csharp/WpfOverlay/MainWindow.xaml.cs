@@ -32,6 +32,13 @@ public partial class MainWindow : FluentWindow
     private int _logLineCount;
     private bool _autoScroll = true;
 
+    // ── Live status tracking ──────────────────────────────────────
+    /// <summary>roomId → live_status (0=offline, 1=live, 2=replay)</summary>
+    private readonly Dictionary<int, int> _liveStatusMap = new();
+    private readonly System.Windows.Threading.DispatcherTimer _liveStatusTimer;
+    private bool _fetchingLiveStatus;
+    private static readonly TimeSpan LiveStatusInterval = TimeSpan.FromMinutes(1);
+
     public MainWindow()
     {
         InitializeComponent();
@@ -56,6 +63,17 @@ public partial class MainWindow : FluentWindow
         _autoScroll = AutoScrollToggle.IsChecked ?? true;
         AutoScrollToggle.Checked += (_, _) => _autoScroll = true;
         AutoScrollToggle.Unchecked += (_, _) => _autoScroll = false;
+
+        // Init live status timer
+        _liveStatusTimer = new System.Windows.Threading.DispatcherTimer
+        {
+            Interval = LiveStatusInterval,
+        };
+        _liveStatusTimer.Tick += async (_, _) => await RefreshAllLiveStatus();
+        _liveStatusTimer.Start();
+
+        // Initial fetch (fire-and-forget)
+        _ = RefreshAllLiveStatus();
     }
 
     // ════════════════════════════════════════════════════════════
@@ -434,10 +452,56 @@ public partial class MainWindow : FluentWindow
         for (int i = 0; i < _config.Rooms.Count; i++)
         {
             var room = _config.Rooms[i];
-            var text = room.DisplayText;
+            var item = new ListBoxItem();
+            var panel = new StackPanel { Orientation = System.Windows.Controls.Orientation.Horizontal };
+
+            // Selected marker
             if (i == _config.SelectedRoomIndex)
-                text = "✓ " + text;
-            RoomListBox.Items.Add(text);
+            {
+                panel.Children.Add(new System.Windows.Controls.TextBlock
+                {
+                    Text = "✓ ",
+                    Foreground = System.Windows.Media.Brushes.Green,
+                    FontWeight = FontWeights.Bold,
+                    VerticalAlignment = VerticalAlignment.Center,
+                });
+            }
+
+            // Live status badge
+            if (_liveStatusMap.TryGetValue(room.RoomId, out var status))
+            {
+                if (status == 1)
+                {
+                    panel.Children.Add(new System.Windows.Controls.TextBlock
+                    {
+                        Text = "● LIVE ",
+                        Foreground = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(0xE0, 0x30, 0x30)),
+                        FontWeight = FontWeights.Bold,
+                        FontSize = 11,
+                        VerticalAlignment = VerticalAlignment.Center,
+                    });
+                }
+                else if (status == 2)
+                {
+                    panel.Children.Add(new System.Windows.Controls.TextBlock
+                    {
+                        Text = "○ 轮播 ",
+                        Foreground = System.Windows.Media.Brushes.Gray,
+                        FontSize = 11,
+                        VerticalAlignment = VerticalAlignment.Center,
+                    });
+                }
+            }
+
+            // Room name
+            panel.Children.Add(new System.Windows.Controls.TextBlock
+            {
+                Text = room.DisplayText,
+                VerticalAlignment = VerticalAlignment.Center,
+            });
+
+            item.Content = panel;
+            RoomListBox.Items.Add(item);
         }
 
         if (_config.Rooms.Count > 0)
@@ -575,6 +639,7 @@ public partial class MainWindow : FluentWindow
             }
 
             _config.Save();
+            _liveStatusMap[fetchedId] = liveStatus;
             RefreshRoomList();
 
             var statusText = liveStatus switch
@@ -658,6 +723,72 @@ public partial class MainWindow : FluentWindow
             }
             _restartingRoom = false;
         }
+    }
+
+    // ════════════════════════════════════════════════════════════
+    //  Live Status (batch fetch + periodic refresh)
+    // ════════════════════════════════════════════════════════════
+
+    /// <summary>
+    /// Fetch live_status for all rooms in parallel and refresh the list.
+    /// </summary>
+    private async Task RefreshAllLiveStatus()
+    {
+        if (_fetchingLiveStatus || _config.Rooms.Count == 0)
+            return;
+
+        _fetchingLiveStatus = true;
+        try
+        {
+            var rooms = _config.Rooms.ToList(); // snapshot
+            var tasks = rooms.Select(r => FetchLiveStatusForRoom(r.RoomId));
+            await Task.WhenAll(tasks);
+            RefreshRoomList();
+        }
+        catch (Exception ex)
+        {
+            Log($"[ERR] 刷新直播状态失败: {ex.Message}");
+        }
+        finally
+        {
+            _fetchingLiveStatus = false;
+        }
+    }
+
+    /// <summary>
+    /// Query the live_status for a single room via B站 get_info API.
+    /// </summary>
+    private async Task FetchLiveStatusForRoom(int roomId)
+    {
+        try
+        {
+            var url = $"https://api.live.bilibili.com/room/v1/Room/get_info?room_id={roomId}";
+            var resp = await _httpClient.GetAsync(url);
+            if (!resp.IsSuccessStatusCode) return;
+
+            var body = await resp.Content.ReadAsStringAsync();
+            var json = JsonDocument.Parse(body);
+
+            if (json.RootElement.GetProperty("code").GetInt32() != 0)
+                return;
+
+            var liveStatus = json.RootElement
+                .GetProperty("data")
+                .GetProperty("live_status")
+                .GetInt32();
+
+            _liveStatusMap[roomId] = liveStatus;
+        }
+        catch
+        {
+            // Silently ignore individual room failures
+        }
+    }
+
+    private void OnRefreshLiveStatus(object sender, RoutedEventArgs e)
+    {
+        _ = RefreshAllLiveStatus();
+        Log("正在刷新所有房间直播状态...");
     }
 
 
@@ -831,6 +962,7 @@ public partial class MainWindow : FluentWindow
     {
         _forceClose = true;
 
+        _liveStatusTimer.Stop();
         _processManager.Stop();
         _overlay?.CloseOverlay();
         _trayIcon?.Dispose();

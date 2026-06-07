@@ -17,8 +17,27 @@ import aiohttp
 import win32file
 import win32pipe
 
-# Add parent to path so blivedm is importable
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+def is_frozen():
+    """True when running as a PyInstaller frozen exe."""
+    return getattr(sys, 'frozen', False)
+
+
+def get_app_root():
+    """
+    Resolve the application root directory.
+    - Frozen exe: directory containing the exe (where config.json lives)
+    - Source mode: project root (parent of py_overlay/)
+    """
+    if is_frozen():
+        return os.path.dirname(sys.executable)
+    return os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+
+# Add parent to path so blivedm is importable (source mode only;
+# when frozen, PyInstaller bundles blivedm via hiddenimports)
+if not is_frozen():
+    sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import blivedm
 from py_overlay.config import load_config
@@ -129,9 +148,11 @@ async def main():
     parser = argparse.ArgumentParser(description="B站弹幕 Overlay 后端")
     parser.add_argument("--room", type=int, help="直播间ID (覆盖config.json)")
     parser.add_argument("--display", type=int, help="显示器索引 (覆盖config.json)")
+    parser.add_argument("--config", type=str, default=None,
+                        help="config.json 的完整路径 (打包模式下由启动器传入)")
     args = parser.parse_args()
 
-    config = load_config()
+    config = load_config(args.config)
 
     if args.room is not None:
         config["room_id"] = args.room

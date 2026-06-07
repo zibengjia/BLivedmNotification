@@ -1,5 +1,6 @@
 import json
 import os
+import sys
 
 DEFAULT_CONFIG = {
     "room_id": 510,
@@ -19,9 +20,24 @@ DEFAULT_CONFIG = {
 }
 
 
+def _is_frozen():
+    return getattr(sys, 'frozen', False)
+
+
+def _default_config_path() -> str:
+    """
+    Resolve the default config.json path.
+    - Frozen exe: next to the exe file
+    - Source mode: relative to this file (../config.json)
+    """
+    if _is_frozen():
+        return os.path.join(os.path.dirname(sys.executable), "config.json")
+    return os.path.join(os.path.dirname(__file__), "..", "config.json")
+
+
 def load_config(path: str = None) -> dict:
     if path is None:
-        path = os.path.join(os.path.dirname(__file__), "..", "config.json")
+        path = _default_config_path()
 
     try:
         with open(path, "r", encoding="utf-8") as f:
