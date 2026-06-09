@@ -1,25 +1,35 @@
 {
-  "room_id": 27484357,
+  "room_id": 13233348,
   "display_index": 0,
   "pipe_name": "BlivedmOverlay",
   "sessdata": "dedecfa4%2C1791691681%2C15798%2A41CjCXfGWgjsKvLe8XA2vDYMHY4e2kvFBiKF5wchKCIoLA54sXFrxqxCkbK4y-RXKiDdoSVnk3eDE0dmpDdnprNmYyUzJSYVlvN01HSTZDdFBVbkFjVmd0b3M1Ti1YZGttRTBNeTItY01LS1lWRDVRYXhKcGlDcmMyMmszWnRiM25nT1ZEZDdDeGFRIIEC",
   "python_path": "",
   "danmaku": {
-    "font_size": 24,
-    "speed": 150,
-    "opacity": 0.85,
+    "font_family": "Microsoft YaHei UI",
+    "font_size": 26,
+    "speed": 100,
+    "opacity": 0.8,
     "track_count": 24,
     "font_weight": "Medium",
     "shadow_enabled": false,
     "shadow_opacity": 1,
     "shadow_offset": 2,
     "position_priority": "Top",
-    "density": "Medium",
-    "hover_hide_enabled": true
+    "density": "High",
+    "hover_hide_enabled": true,
+    "background_enabled": true,
+    "background_color": "#000000",
+    "background_opacity": 0.2,
+    "background_radius": 4.5
   },
   "super_chat": {
     "font_size": 40,
-    "duration_ms": 15000
+    "duration_ms": 30000,
+    "alignment": "Center",
+    "background_enabled": true,
+    "background_color": "#000000",
+    "background_opacity": 0.3,
+    "background_radius": 6
   },
   "rooms": [
     {
@@ -43,5 +53,5 @@
       "DisplayText": "\u963F\u6893\u4ECE\u5C0F\u5C31\u5F88\u53EF\u7231 (80397)"
     }
   ],
-  "selected_room_index": 0
+  "selected_room_index": 2
 }
