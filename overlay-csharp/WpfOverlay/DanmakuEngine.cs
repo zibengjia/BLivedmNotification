@@ -89,8 +89,17 @@ public class DanmakuEngine
         var price = GetInt(msg, "price", 0);
         var color = GetInt(msg, "color", 0xFFD700);
 
+        // Read B站 API-provided SC colors and duration
+        var bgColor = GetString(msg, "background_color");
+        var bgBottomColor = GetString(msg, "background_bottom_color");
+        var bgPriceColor = GetString(msg, "background_price_color");
+        var apiTimeSec = GetInt(msg, "time", 0);
+
         var displayText = $"[SC ¥{price}] {uname}: {text}";
         var fontSize = _config.SuperChat.FontSize;
+
+        // Use API-provided duration if available; otherwise fall back to config
+        var durationMs = apiTimeSec > 0 ? apiTimeSec * 1000 : _config.SuperChat.DurationMs;
 
         var item = new DanmakuItem
         {
@@ -102,9 +111,12 @@ public class DanmakuEngine
             Opacity = _config.Danmaku.Opacity,
             IsSC = true,
             SCPrice = price,
+            SCBackgroundColor = bgColor,
+            SCBackgroundBottomColor = bgBottomColor,
+            SCBackgroundPriceColor = bgPriceColor,
             TextWidth = MeasureTextWidth?.Invoke(displayText, fontSize)
                        ?? displayText.Length * fontSize * 0.55f,
-            MaxLifetimeMs = _config.SuperChat.DurationMs,
+            MaxLifetimeMs = durationMs,
         };
 
         lock (_lock)
@@ -118,9 +130,25 @@ public class DanmakuEngine
             }
             // Clamp to SC zone
             item.Y = Math.Min(scY, ScZoneHeight - item.FontSize);
-            item.X = 4f; // Stationary at left edge (SC duration-based, doesn't scroll)
+
+            // Position X based on alignment config
+            item.X = CalcScX(item.TextWidth);
             _items.Add(item);
         }
+    }
+
+    /// <summary>
+    /// Calculate SC X position based on alignment setting.
+    /// </summary>
+    private float CalcScX(float textWidth)
+    {
+        const float margin = 4f;
+        return _config.SuperChat.Alignment switch
+        {
+            "Center" => Math.Max(margin, (ScreenWidth - textWidth) / 2f),
+            "Right"  => Math.Max(margin, ScreenWidth - textWidth - margin),
+            _        => margin, // "Left"
+        };
     }
 
     public void Update()

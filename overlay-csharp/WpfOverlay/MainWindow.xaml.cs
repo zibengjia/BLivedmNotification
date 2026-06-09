@@ -109,6 +109,21 @@ public partial class MainWindow : FluentWindow
         ShadowOffsetSlider.Value = _config.Danmaku.ShadowOffset;
         HoverHideToggle.IsChecked = _config.Danmaku.HoverHideEnabled;
 
+        // Danmaku background
+        DmBgEnabledToggle.IsChecked = _config.Danmaku.BackgroundEnabled;
+        DmBgColorBox.Text = _config.Danmaku.BackgroundColor;
+        DmBgOpacitySlider.Value = _config.Danmaku.BackgroundOpacity;
+        DmBgRadiusSlider.Value = _config.Danmaku.BackgroundRadius;
+        UpdateColorPreview(DmBgColorPreview, _config.Danmaku.BackgroundColor);
+
+        // SC alignment and background
+        SelectComboItem(ScAlignmentCombo, _config.SuperChat.Alignment);
+        ScBgEnabledToggle.IsChecked = _config.SuperChat.BackgroundEnabled;
+        ScBgColorBox.Text = _config.SuperChat.BackgroundColor;
+        ScBgOpacitySlider.Value = _config.SuperChat.BackgroundOpacity;
+        ScBgRadiusSlider.Value = _config.SuperChat.BackgroundRadius;
+        UpdateColorPreview(ScBgColorPreview, _config.SuperChat.BackgroundColor);
+
         RefreshRoomList();
         UpdateSliderLabels();
     }
@@ -139,6 +154,19 @@ public partial class MainWindow : FluentWindow
         _config.Danmaku.ShadowEnabled = ShadowEnabledToggle.IsChecked ?? true;
         _config.Danmaku.ShadowOpacity = (float)ShadowOpacitySlider.Value;
         _config.Danmaku.ShadowOffset = (float)ShadowOffsetSlider.Value;
+
+        // Danmaku background
+        _config.Danmaku.BackgroundEnabled = DmBgEnabledToggle.IsChecked ?? false;
+        _config.Danmaku.BackgroundColor = DmBgColorBox.Text.Trim();
+        _config.Danmaku.BackgroundOpacity = (float)Math.Round(DmBgOpacitySlider.Value, 2);
+        _config.Danmaku.BackgroundRadius = (float)Math.Round(DmBgRadiusSlider.Value, 1);
+
+        // SC alignment and background
+        _config.SuperChat.Alignment = (ScAlignmentCombo.SelectedItem as ComboBoxItem)?.Content?.ToString() ?? "Left";
+        _config.SuperChat.BackgroundEnabled = ScBgEnabledToggle.IsChecked ?? true;
+        _config.SuperChat.BackgroundColor = ScBgColorBox.Text.Trim();
+        _config.SuperChat.BackgroundOpacity = (float)Math.Round(ScBgOpacitySlider.Value, 2);
+        _config.SuperChat.BackgroundRadius = (float)Math.Round(ScBgRadiusSlider.Value, 1);
 
         _config.Save();
         Log("配置已保存。");
@@ -862,6 +890,10 @@ public partial class MainWindow : FluentWindow
         ScDurationLabel.Text = $"{(int)ScDurationSlider.Value} ms";
         ShadowOpacityLabel.Text = $"{ShadowOpacitySlider.Value:F2}";
         ShadowOffsetLabel.Text = $"{ShadowOffsetSlider.Value:F1}";
+        ScBgOpacityLabel.Text = $"{ScBgOpacitySlider.Value:F2}";
+        ScBgRadiusLabel.Text = $"{ScBgRadiusSlider.Value:F1}";
+        DmBgOpacityLabel.Text = $"{DmBgOpacitySlider.Value:F2}";
+        DmBgRadiusLabel.Text = $"{DmBgRadiusSlider.Value:F1}";
     }
 
     // ════════════════════════════════════════════════════════════
@@ -873,6 +905,83 @@ public partial class MainWindow : FluentWindow
         bool enabled = ShadowEnabledToggle.IsChecked ?? false;
         ShadowOpacitySlider.IsEnabled = enabled;
         ShadowOffsetSlider.IsEnabled = enabled;
+    }
+
+    // ════════════════════════════════════════════════════════════
+    //  Background toggles & color
+    // ════════════════════════════════════════════════════════════
+
+    private void OnScBgToggled(object sender, RoutedEventArgs e)
+    {
+        bool enabled = ScBgEnabledToggle.IsChecked ?? false;
+        ScBgOpacitySlider.IsEnabled = enabled;
+        ScBgRadiusSlider.IsEnabled = enabled;
+        ScBgColorBox.IsEnabled = enabled;
+    }
+
+    private void OnDmBgToggled(object sender, RoutedEventArgs e)
+    {
+        bool enabled = DmBgEnabledToggle.IsChecked ?? false;
+        DmBgOpacitySlider.IsEnabled = enabled;
+        DmBgRadiusSlider.IsEnabled = enabled;
+        DmBgColorBox.IsEnabled = enabled;
+    }
+
+    private void OnScBgColorChanged(object sender, RoutedEventArgs e)
+    {
+        var hex = ScBgColorBox.Text.Trim();
+        if (IsValidHexColor(hex))
+        {
+            UpdateColorPreview(ScBgColorPreview, hex);
+        }
+    }
+
+    private void OnDmBgColorChanged(object sender, RoutedEventArgs e)
+    {
+        var hex = DmBgColorBox.Text.Trim();
+        if (IsValidHexColor(hex))
+        {
+            UpdateColorPreview(DmBgColorPreview, hex);
+        }
+    }
+
+    private static bool IsValidHexColor(string hex)
+    {
+        if (string.IsNullOrEmpty(hex)) return false;
+        hex = hex.TrimStart('#');
+        return (hex.Length == 6 || hex.Length == 8)
+               && hex.All(c => (c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F'));
+    }
+
+    private static void UpdateColorPreview(Border border, string hex)
+    {
+        try
+        {
+            var color = ParseHexToColor(hex);
+            border.Background = new System.Windows.Media.SolidColorBrush(color);
+        }
+        catch { /* ignore invalid hex */ }
+    }
+
+    private static System.Windows.Media.Color ParseHexToColor(string hex)
+    {
+        hex = hex.TrimStart('#');
+        if (hex.Length == 6)
+        {
+            byte r = Convert.ToByte(hex.Substring(0, 2), 16);
+            byte g = Convert.ToByte(hex.Substring(2, 2), 16);
+            byte b = Convert.ToByte(hex.Substring(4, 2), 16);
+            return System.Windows.Media.Color.FromRgb(r, g, b);
+        }
+        if (hex.Length == 8)
+        {
+            byte a = Convert.ToByte(hex.Substring(0, 2), 16);
+            byte r = Convert.ToByte(hex.Substring(2, 2), 16);
+            byte g = Convert.ToByte(hex.Substring(4, 2), 16);
+            byte b = Convert.ToByte(hex.Substring(6, 2), 16);
+            return System.Windows.Media.Color.FromArgb(a, r, g, b);
+        }
+        return System.Windows.Media.Colors.Black;
     }
 
     // ════════════════════════════════════════════════════════════

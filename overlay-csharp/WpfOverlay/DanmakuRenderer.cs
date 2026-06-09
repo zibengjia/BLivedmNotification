@@ -24,7 +24,6 @@ public class DanmakuRenderer : FrameworkElement
     private readonly FontWeight _fontWeight;
 
     private static readonly Color DefaultShadowColor = Color.FromArgb(255, 0, 0, 0);
-    private const double ScBackgroundAlpha = 0.3;
 
     public DanmakuRenderer(Config config)
     {
@@ -139,19 +138,55 @@ public class DanmakuRenderer : FrameworkElement
             dc.DrawText(ftShadow, new Point(offset, offset));
         }
 
+        // Background rendering
+        if (item.IsSC && _config.SuperChat.BackgroundEnabled)
+        {
+            var scConfig = _config.SuperChat;
+            double w = item.TextWidth + 16;
+            double h = fontSize + 12;
+            var radius = scConfig.BackgroundRadius;
+            var bgRect = new Rect(-6, -2, w, h);
+
+            // Use B站 API-provided colors for gradient when available
+            if (!string.IsNullOrEmpty(item.SCBackgroundColor))
+            {
+                var topColor = ParseHexColor(item.SCBackgroundColor);
+                var bottomColor = !string.IsNullOrEmpty(item.SCBackgroundBottomColor)
+                    ? ParseHexColor(item.SCBackgroundBottomColor)
+                    : topColor;
+                var bgAlpha = (byte)(opacity * scConfig.BackgroundOpacity * 255);
+
+                var gradientBrush = new LinearGradientBrush(
+                    Color.FromArgb(bgAlpha, topColor.R, topColor.G, topColor.B),
+                    Color.FromArgb(bgAlpha, bottomColor.R, bottomColor.G, bottomColor.B),
+                    new Point(0, 0), new Point(0, 1));
+                gradientBrush.Freeze();
+                dc.DrawRoundedRectangle(gradientBrush, null, bgRect, radius, radius);
+            }
+            else
+            {
+                // Fallback to config color
+                var bgColor = ParseHexColor(scConfig.BackgroundColor);
+                var bgAlpha = (byte)(opacity * scConfig.BackgroundOpacity * 255);
+                var bgBrush = new SolidColorBrush(Color.FromArgb(bgAlpha, bgColor.R, bgColor.G, bgColor.B));
+                bgBrush.Freeze();
+                dc.DrawRoundedRectangle(bgBrush, null, bgRect, radius, radius);
+            }
+        }
+        else if (!item.IsSC && danmakuConfig.BackgroundEnabled)
+        {
+            var bgColor = ParseHexColor(danmakuConfig.BackgroundColor);
+            var bgAlpha = (byte)(opacity * danmakuConfig.BackgroundOpacity * 255);
+            var bgBrush = new SolidColorBrush(Color.FromArgb(bgAlpha, bgColor.R, bgColor.G, bgColor.B));
+            bgBrush.Freeze();
+            double w = item.TextWidth + 10;
+            double h = fontSize + 6;
+            var radius = danmakuConfig.BackgroundRadius;
+            dc.DrawRoundedRectangle(bgBrush, null, new Rect(-4, -1, w, h), radius, radius);
+        }
+
         // Main text
         dc.DrawText(ft, new Point(0, 0));
-
-        // SC background
-        if (item.IsSC)
-        {
-            var bgAlpha = (byte)(opacity * ScBackgroundAlpha * 255);
-            var bgBrush = new SolidColorBrush(Color.FromArgb(bgAlpha, 0, 0, 0));
-            bgBrush.Freeze();
-            double w = item.TextWidth + 12;
-            double h = fontSize + 12;
-            dc.DrawRectangle(bgBrush, null, new Rect(-4, -2, w, h));
-        }
     }
 
     private FormattedText BuildFormattedText(string text, double fontSize, Brush foreground)
@@ -195,5 +230,34 @@ public class DanmakuRenderer : FrameworkElement
 
         byte a = (byte)Math.Clamp(opacity * 255, 0, 255);
         return Color.FromArgb(a, r, g, b);
+    }
+
+    /// <summary>
+    /// Parse hex color string like "#RRGGBB" or "#AARRGGBB" to Color (alpha ignored, set to 255).
+    /// </summary>
+    private static Color ParseHexColor(string hex)
+    {
+        if (string.IsNullOrEmpty(hex)) return Color.FromArgb(255, 0, 0, 0);
+        hex = hex.TrimStart('#');
+        try
+        {
+            if (hex.Length == 6)
+            {
+                byte r = Convert.ToByte(hex.Substring(0, 2), 16);
+                byte g = Convert.ToByte(hex.Substring(2, 2), 16);
+                byte b = Convert.ToByte(hex.Substring(4, 2), 16);
+                return Color.FromArgb(255, r, g, b);
+            }
+            if (hex.Length == 8)
+            {
+                byte a = Convert.ToByte(hex.Substring(0, 2), 16);
+                byte r = Convert.ToByte(hex.Substring(2, 2), 16);
+                byte g = Convert.ToByte(hex.Substring(4, 2), 16);
+                byte b = Convert.ToByte(hex.Substring(6, 2), 16);
+                return Color.FromArgb(a, r, g, b);
+            }
+        }
+        catch { /* fall through */ }
+        return Color.FromArgb(255, 0, 0, 0);
     }
 }

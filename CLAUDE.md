@@ -53,9 +53,20 @@ WinForms (`Overlay/`) = legacy stable. WinUI 3 (`WinUIOverlay/`) = abandoned (tr
     "shadow_enabled": true, "shadow_opacity": 0.6, "shadow_offset": 2,
     "position_priority": "Top",        // Top|Center|Bottom — track fill order
     "density": "Medium",               // Low=sparse|Medium|High=dense
-    "hover_hide_enabled": false        // Mouse hover → hide danmaku
+    "hover_hide_enabled": false,       // Mouse hover → hide danmaku
+    "background_enabled": false,       // Enable danmaku background
+    "background_color": "#000000",     // Background color (hex #RRGGBB)
+    "background_opacity": 0.3,         // Background opacity 0-1
+    "background_radius": 4.0           // Background corner radius (px)
   },
-  "super_chat": { "font_size": 40, "duration_ms": 15000 }
+  "super_chat": {
+    "font_size": 40, "duration_ms": 15000,
+    "alignment": "Left",               // Left|Center|Right — SC text position
+    "background_enabled": true,        // Enable SC background
+    "background_color": "#000000",     // Background color (hex #RRGGBB)
+    "background_opacity": 0.3,         // Background opacity 0-1
+    "background_radius": 6.0           // Background corner radius (px)
+  }
 }
 ```
 

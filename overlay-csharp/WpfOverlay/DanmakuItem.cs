@@ -34,6 +34,21 @@ public class DanmakuItem
     public int SCPrice { get; set; }
 
     /// <summary>
+    /// SC专用: 顶部/主背景色 (B站API提供, '#rrggbb')
+    /// </summary>
+    public string SCBackgroundColor { get; set; } = "";
+
+    /// <summary>
+    /// SC专用: 底部背景色 (用于渐变, B站API提供)
+    /// </summary>
+    public string SCBackgroundBottomColor { get; set; } = "";
+
+    /// <summary>
+    /// SC专用: 价格标签背景色 (B站API提供)
+    /// </summary>
+    public string SCBackgroundPriceColor { get; set; } = "";
+
+    /// <summary>
     /// 鼠标悬停标志
     /// </summary>
     public bool IsHovered { get; set; }

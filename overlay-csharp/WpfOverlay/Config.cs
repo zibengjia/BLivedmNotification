@@ -103,6 +103,18 @@ public class Config
 
         [JsonPropertyName("hover_hide_enabled")]
         public bool HoverHideEnabled { get; set; } = false;
+
+        [JsonPropertyName("background_enabled")]
+        public bool BackgroundEnabled { get; set; } = false;
+
+        [JsonPropertyName("background_color")]
+        public string BackgroundColor { get; set; } = "#000000";
+
+        [JsonPropertyName("background_opacity")]
+        public float BackgroundOpacity { get; set; } = 0.3f;
+
+        [JsonPropertyName("background_radius")]
+        public float BackgroundRadius { get; set; } = 4.0f;
     }
 
     public class SuperChatConfig
@@ -112,6 +124,21 @@ public class Config
 
         [JsonPropertyName("duration_ms")]
         public int DurationMs { get; set; } = 15000;
+
+        [JsonPropertyName("alignment")]
+        public string Alignment { get; set; } = "Left";
+
+        [JsonPropertyName("background_enabled")]
+        public bool BackgroundEnabled { get; set; } = true;
+
+        [JsonPropertyName("background_color")]
+        public string BackgroundColor { get; set; } = "#000000";
+
+        [JsonPropertyName("background_opacity")]
+        public float BackgroundOpacity { get; set; } = 0.3f;
+
+        [JsonPropertyName("background_radius")]
+        public float BackgroundRadius { get; set; } = 6.0f;
     }
 
     /// <summary>Save to the path this config was loaded from (or a given path).</summary>

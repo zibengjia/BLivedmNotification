@@ -18,6 +18,15 @@
                 <ui:ControlsDictionary />
             </ResourceDictionary.MergedDictionaries>
 
+            <!-- Fix: WPF-UI 4.3.0 ToggleSwitch hover bug — the library references
+                 AccentFillColorSecondary/Tertiary as Color keys in ToggleSwitchFillOnPointerOver,
+                 but Accent.xaml only defines the Brush variants (*Brush). Missing Color keys
+                 cause DynamicResource to produce transparent brushes, making the accent fill
+                 disappear on hover. Defining these Color keys resolves the issue. -->
+            <Color x:Key="AccentFillColorDefault">#003e92</Color>
+            <Color x:Key="AccentFillColorSecondary">#003e92</Color>
+            <Color x:Key="AccentFillColorTertiary">#001a68</Color>
+
             <!-- ── Shared styles ──────────────────────────────────── -->
 
             <!-- Section header with accent bar -->
@@ -500,6 +509,78 @@
                                            Text="覆盖层默认穿透鼠标事件，通过系统级鼠标坐标检测实现。" />
                             </StackPanel>
                         </ui:Card>
+
+                        <!-- ── Danmaku Background Settings ── -->
+                        <ui:Card Style="{StaticResource SettingsCard}">
+                            <StackPanel>
+                                <StackPanel Style="{StaticResource SectionHeader}">
+                                    <Border Style="{StaticResource AccentBar}" />
+                                    <TextBlock Text="弹幕背景" Style="{StaticResource SectionTitle}" />
+                                </StackPanel>
+
+                                <Grid Margin="0,0,0,6">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="80" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="背景" Style="{StaticResource RowLabel}" />
+                                    <ui:ToggleSwitch x:Name="DmBgEnabledToggle" Grid.Column="1"
+                                                     Content="启用弹幕背景"
+                                                     Checked="OnDmBgToggled" Unchecked="OnDmBgToggled" />
+                                </Grid>
+
+                                <Grid Margin="0,0,0,6">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="80" />
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="颜色" Style="{StaticResource RowLabel}" />
+                                    <Border x:Name="DmBgColorPreview" Grid.Column="1"
+                                            Width="28" Height="28" CornerRadius="4"
+                                            BorderThickness="1"
+                                            BorderBrush="{ui:ThemeResource DividerStrokeColorDefaultBrush}"
+                                            Background="Black" Margin="0,0,8,0" />
+                                    <TextBox x:Name="DmBgColorBox" Grid.Column="2"
+                                             Text="#000000" MaxLength="7"
+                                             LostFocus="OnDmBgColorChanged" />
+                                </Grid>
+
+                                <Grid Margin="0,0,0,6">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="80" />
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="65" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="不透明度" Style="{StaticResource RowLabel}" />
+                                    <Slider x:Name="DmBgOpacitySlider" Grid.Column="1"
+                                            Minimum="0.0" Maximum="1.0" TickFrequency="0.05"
+                                            ValueChanged="OnDanmakuPreviewChanged"
+                                            IsEnabled="{Binding IsChecked, ElementName=DmBgEnabledToggle}" />
+                                    <Border Grid.Column="2" Style="{StaticResource ValueBadge}">
+                                        <TextBlock x:Name="DmBgOpacityLabel" Text="0.30" Style="{StaticResource ValueBadgeText}" />
+                                    </Border>
+                                </Grid>
+
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="80" />
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="65" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="圆角" Style="{StaticResource RowLabel}" />
+                                    <Slider x:Name="DmBgRadiusSlider" Grid.Column="1"
+                                            Minimum="0.0" Maximum="20.0" TickFrequency="1.0"
+                                            ValueChanged="OnDanmakuPreviewChanged"
+                                            IsEnabled="{Binding IsChecked, ElementName=DmBgEnabledToggle}" />
+                                    <Border Grid.Column="2" Style="{StaticResource ValueBadge}">
+                                        <TextBlock x:Name="DmBgRadiusLabel" Text="4.0" Style="{StaticResource ValueBadgeText}" />
+                                    </Border>
+                                </Grid>
+                                <TextBlock Style="{StaticResource HintText}"
+                                           Text="在弹幕文字后方绘制半透明圆角矩形背景，提高可读性。" />
+                            </StackPanel>
+                        </ui:Card>
                     </StackPanel>
                 </ScrollViewer>
             </TabItem>
@@ -534,7 +615,7 @@
                                     </Border>
                                 </Grid>
 
-                                <Grid>
+                                <Grid Margin="0,0,0,6">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="80" />
                                         <ColumnDefinition Width="*" />
@@ -546,6 +627,94 @@
                                             ValueChanged="OnDanmakuPreviewChanged" />
                                     <Border Grid.Column="2" Style="{StaticResource ValueBadge}">
                                         <TextBlock x:Name="ScDurationLabel" Text="15000 ms" Style="{StaticResource ValueBadgeText}" />
+                                    </Border>
+                                </Grid>
+
+                                <Grid Margin="0,0,0,6">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="80" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="对齐方式" Style="{StaticResource RowLabel}" />
+                                    <ComboBox x:Name="ScAlignmentCombo" Grid.Column="1"
+                                              SelectedIndex="0">
+                                        <ComboBoxItem>Left</ComboBoxItem>
+                                        <ComboBoxItem>Center</ComboBoxItem>
+                                        <ComboBoxItem>Right</ComboBoxItem>
+                                    </ComboBox>
+                                </Grid>
+                            </StackPanel>
+                        </ui:Card>
+
+                        <!-- ── SC Background Settings ── -->
+                        <ui:Card Style="{StaticResource SettingsCard}">
+                            <StackPanel>
+                                <StackPanel Style="{StaticResource SectionHeader}">
+                                    <Border Style="{StaticResource AccentBar}">
+                                        <Border.Background>
+                                            <SolidColorBrush Color="#FFB900" />
+                                        </Border.Background>
+                                    </Border>
+                                    <TextBlock Text="醒目留言背景" Style="{StaticResource SectionTitle}" />
+                                </StackPanel>
+
+                                <Grid Margin="0,0,0,6">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="80" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="背景" Style="{StaticResource RowLabel}" />
+                                    <ui:ToggleSwitch x:Name="ScBgEnabledToggle" Grid.Column="1"
+                                                     Content="启用背景"
+                                                     Checked="OnScBgToggled" Unchecked="OnScBgToggled" />
+                                </Grid>
+
+                                <Grid Margin="0,0,0,6">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="80" />
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="颜色" Style="{StaticResource RowLabel}" />
+                                    <Border x:Name="ScBgColorPreview" Grid.Column="1"
+                                            Width="28" Height="28" CornerRadius="4"
+                                            BorderThickness="1"
+                                            BorderBrush="{ui:ThemeResource DividerStrokeColorDefaultBrush}"
+                                            Background="Black" Margin="0,0,8,0" />
+                                    <TextBox x:Name="ScBgColorBox" Grid.Column="2"
+                                             Text="#000000" MaxLength="7"
+                                             LostFocus="OnScBgColorChanged" />
+                                </Grid>
+
+                                <Grid Margin="0,0,0,6">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="80" />
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="65" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="不透明度" Style="{StaticResource RowLabel}" />
+                                    <Slider x:Name="ScBgOpacitySlider" Grid.Column="1"
+                                            Minimum="0.0" Maximum="1.0" TickFrequency="0.05"
+                                            ValueChanged="OnDanmakuPreviewChanged"
+                                            IsEnabled="{Binding IsChecked, ElementName=ScBgEnabledToggle}" />
+                                    <Border Grid.Column="2" Style="{StaticResource ValueBadge}">
+                                        <TextBlock x:Name="ScBgOpacityLabel" Text="0.30" Style="{StaticResource ValueBadgeText}" />
+                                    </Border>
+                                </Grid>
+
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="80" />
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="65" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="圆角" Style="{StaticResource RowLabel}" />
+                                    <Slider x:Name="ScBgRadiusSlider" Grid.Column="1"
+                                            Minimum="0.0" Maximum="20.0" TickFrequency="1.0"
+                                            ValueChanged="OnDanmakuPreviewChanged"
+                                            IsEnabled="{Binding IsChecked, ElementName=ScBgEnabledToggle}" />
+                                    <Border Grid.Column="2" Style="{StaticResource ValueBadge}">
+                                        <TextBlock x:Name="ScBgRadiusLabel" Text="6.0" Style="{StaticResource ValueBadgeText}" />
                                     </Border>
                                 </Grid>
                             </StackPanel>
