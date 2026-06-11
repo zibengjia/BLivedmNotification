@@ -1,0 +1,10 @@
+[已修复] BUG:开关类按钮在开启状态下鼠标悬停会蓝色背景会消失
+  → 根因: WPF-UI 4.3.0 ToggleSwitch 模板引用了 AccentFillColorSecondary/Tertiary 作为 Color 资源，
+    但 Accent.xaml 仅定义了 Brush 变体 (*Brush)，DynamicResource 找不到 Color 导致画刷透明。
+  → 修复: 在 MainWindow.xaml Window.Resources 中补充缺失的 Color 资源定义。
+
+[已实现] 功能:根据sc价值设置出现持续时间和背景颜色
+  → Python handler.py: 传递 background_color, background_bottom_color, background_price_color, time 字段
+  → DanmakuItem.cs: 新增 SCBackgroundColor, SCBackgroundBottomColor, SCBackgroundPriceColor 属性
+  → DanmakuEngine.cs: 使用 B站 API 提供的 time (秒) 作为持续时间，无 API 值时回退到 config
+  → DanmakuRenderer.cs: SC 背景使用 API 颜色渲染垂直渐变 (top→bottom color)，无 API 颜色时回退到 config 颜色

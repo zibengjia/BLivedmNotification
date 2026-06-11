@@ -35,7 +35,11 @@ class OverlayHandler(blivedm.BaseHandler):
             "price": message.price,
             "uname": message.uname,
             "message": message.message,
-            "color": 0xFFD700,  # gold
+            "color": 0xFFD700,  # gold (legacy fallback)
+            "time": message.time,  # duration in seconds from B站 API
+            "background_color": message.background_color,  # top/primary bg '#rrggbb'
+            "background_bottom_color": message.background_bottom_color,  # bottom bg for gradient
+            "background_price_color": message.background_price_color,  # price label bg color
         }
         self._send(data)
 

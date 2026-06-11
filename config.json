@@ -1,16 +1,62 @@
 {
-  "room_id": 27484357,
+  "room_id": 4350043,
   "display_index": 0,
   "pipe_name": "BlivedmOverlay",
   "sessdata": "dedecfa4%2C1791691681%2C15798%2A41CjCXfGWgjsKvLe8XA2vDYMHY4e2kvFBiKF5wchKCIoLA54sXFrxqxCkbK4y-RXKiDdoSVnk3eDE0dmpDdnprNmYyUzJSYVlvN01HSTZDdFBVbkFjVmd0b3M1Ti1YZGttRTBNeTItY01LS1lWRDVRYXhKcGlDcmMyMmszWnRiM25nT1ZEZDdDeGFRIIEC",
+  "python_path": "",
   "danmaku": {
-    "font_size": 21,
-    "speed": 280,
-    "opacity": 1,
-    "track_count": 14
+    "font_family": "Microsoft YaHei UI",
+    "font_size": 24,
+    "speed": 150,
+    "opacity": 0.85,
+    "track_count": 24,
+    "font_weight": "Medium",
+    "shadow_enabled": false,
+    "shadow_opacity": 1,
+    "shadow_offset": 2,
+    "position_priority": "Top",
+    "density": "Medium",
+    "hover_hide_enabled": true,
+    "background_enabled": false,
+    "background_color": "#000000",
+    "background_opacity": 0.3,
+    "background_radius": 4
   },
   "super_chat": {
     "font_size": 40,
-    "duration_ms": 15000
-  }
+    "duration_ms": 15000,
+    "alignment": "Left",
+    "background_enabled": true,
+    "background_color": "#000000",
+    "background_opacity": 0.3,
+    "background_radius": 6
+  },
+  "rooms": [
+    {
+      "room_id": 27484357,
+      "label": "\u59AE\u8389\u5B89Lily",
+      "DisplayText": "\u59AE\u8389\u5B89Lily (27484357)"
+    },
+    {
+      "room_id": 4350043,
+      "label": "\u4E00\u7C73\u516B\u7684\u5764\u513F",
+      "DisplayText": "\u4E00\u7C73\u516B\u7684\u5764\u513F (4350043)"
+    },
+    {
+      "room_id": 13233348,
+      "label": "\u64B8sir\u5170\u9675\u541B",
+      "DisplayText": "\u64B8sir\u5170\u9675\u541B (13233348)"
+    },
+    {
+      "room_id": 80397,
+      "label": "\u963F\u6893\u4ECE\u5C0F\u5C31\u5F88\u53EF\u7231",
+      "DisplayText": "\u963F\u6893\u4ECE\u5C0F\u5C31\u5F88\u53EF\u7231 (80397)"
+    },
+    {
+      "room_id": 22642754,
+      "label": "\u6843\u51E0OvO",
+      "DisplayText": "\u6843\u51E0OvO (22642754)"
+    }
+  ],
+  "selected_room_index": 1
 }

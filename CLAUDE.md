@@ -5,211 +5,137 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Commands
 
 ```bash
-# C# overlay — Build
-cd overlay-csharp && dotnet build
-
-# C# overlay — Run (with config UI)
-cd overlay-csharp && dotnet run --project Overlay
-
-# C# overlay — Run overlay-only mode (skip launcher, for debugging)
-cd overlay-csharp && dotnet run --project Overlay -- --overlay
-
-# Python — Setup (PDM)
-pdm install
-
-# Python — Run overlay backend directly (for testing without C# frontend)
-python py_overlay/main.py --room 27484357
+cd overlay-csharp/WpfOverlay && dotnet build                # Build WPF (primary)
+cd overlay-csharp/WpfOverlay && dotnet run                   # Run with launcher
+cd overlay-csharp/WpfOverlay && dotnet run -- --overlay      # Overlay-only mode
+cd overlay-csharp/WpfOverlay && dotnet clean && dotnet build # Clean rebuild
+cd overlay-csharp/Overlay && dotnet build                    # Build WinForms (legacy)
+pdm install  # or: uv sync                                  # Python setup (uv.lock also maintained)
+python py_overlay/main.py --room 27484357                    # Run backend standalone
+python py_overlay/main.py --room 27484357 --display 1        # Backend targeting monitor 1
+python py_overlay/fetch_room.py 27484357                     # Fetch room info (auto-fill name)
 ```
-
-No test suite, linter config, or CI exists.
-
-## Project Overview
-
-Dual-process bilibili live danmaku overlay for Windows:
-
-```
-B站 WebSocket ← blivedm (Python) → [Named Pipe] → PipeClient (C#) → DanmakuEngine → DanmakuRenderer → Direct2D overlay
-```
-
-Two processes communicate over a Windows Named Pipe with JSON-line protocol:
-
-1. **Python backend** (`py_overlay/`): blivedm WebSocket client → OverlayHandler → Named Pipe server
-2. **C# frontend** (`overlay-csharp/`): WinForms launcher (MainForm) + Direct2D transparent overlay (OverlayForm)
-
-Both read/write `config.json` at repo root (snake_case fields, shared format).
 
 ## Architecture
 
 ```
-BLivedmNotification/
-├── config.json                  # Shared config (both C# and Python read/write this)
-├── blivedm/                     # blivedm v1.1.6 Python library (upstream, vendored)
-│   ├── __init__.py              # version = '1.1.6', re-exports
-│   ├── handlers.py              # HandlerInterface + BaseHandler (command dispatch)
-│   ├── utils.py                 # reconnect policies, USER_AGENT
-│   ├── clients/
-│   │   ├── web.py               # BLiveClient (cookie auth, WBI sign, room init)
-│   │   └── ws_base.py           # WebSocketClientBase (core protocol)
-│   └── models/
-│       ├── web.py               # typed message dataclasses
-│       └── pb.py                # pure-protobuf (InteractWordV2)
-│
-├── py_overlay/                  # Python overlay bridge
-│   ├── main.py                  # Entry: starts pipe server + blivedm client
-│   ├── handler.py               # OverlayHandler: streams events to pipe
-│   └── config.py                # Loads config.json with defaults
-│
-├── overlay-csharp/              # C# WinForms + Direct2D overlay
-│   └── Overlay/
-│       ├── Program.cs           # Entry: MainForm, or --overlay flag for direct overlay
-│       ├── MainForm.cs          # Launcher: tabbed settings + start/stop buttons + tray
-│       ├── OverlayForm.cs       # Transparent fullscreen overlay window (Escape to close)
-│       ├── Config.cs            # Config POCO: Load/Save JSON, snake_case via JsonPropertyName
-│       ├── DanmakuEngine.cs     # Track assignment, collision detection, animation update
-│       ├── DanmakuRenderer.cs   # Direct2D/DirectWrite rendering (Vortice)
-│       ├── DanmakuItem.cs       # Danmaku/SC display state
-│       ├── PipeClient.cs        # Named Pipe consumer (reconnect on disconnect)
-│       └── Overlay.csproj       # net8.0-windows, WinForms, Vortice.Direct2D1
-│
-├── pyproject.toml               # PDM build config (blivedm library)
-└── sample.py                    # blivedm library usage example
+B站 WebSocket ← blivedm (Python) → [Named Pipe] → PipeClient (C#) → DanmakuEngine → DanmakuRenderer → transparent overlay
 ```
 
-### Telemetry / Protocol flows
+Two processes, JSON-line protocol over Named Pipe.
 
-**IPC protocol** (Named Pipe, JSON line format, `\n` delimited):
+**Python backend** (`py_overlay/`): blivedm WebSocket client → OverlayHandler → Named Pipe **server** (creates pipe, waits for client)
+**C# WPF frontend** (`overlay-csharp/WpfOverlay/`): PipeClient (Named Pipe **client**) → DanmakuEngine (track assign, update positions) → DanmakuRenderer (DrawingVisual+FormattedText) → OverlayWindow (transparent fullscreen)
 
-```python
-# Danmaku message (python handler.py → C# DanmakuEngine)
+Two processes started by launcher: `MainWindow` launches Python backend via `ProcessManager`, which creates pipe and waits. Overlay window (same process, separate thread-safe engine) connects as pipe client. Daemon doesn't own overlay — they communicate via IPC.
+
+WinForms (`Overlay/`) = legacy stable. WinUI 3 (`WinUIOverlay/`) = abandoned (transparency unsolved).
+
+`sample.py` = blivedm library demo script (not part of overlay app).
+
+## Config (`config.json` at repo root)
+
+```jsonc
+{
+  // 当前选中房间 (legacy, now derived from rooms[selected_room_index])
+  "room_id": 13233348,
+  "display_index": 0,          // Monitor index for overlay
+  "pipe_name": "BlivedmOverlay",
+  "sessdata": "",              // B站 SESSDATA cookie for authenticated access
+  "python_path": "",           // Custom Python path (empty = auto-detect venv/uv)
+  "rooms": [                   // Multi-room list
+    { "room_id": 27484357, "label": "主播名" }
+  ],
+  "selected_room_index": 0,
+  "danmaku": {
+    "font_size": 28, "speed": 300, "opacity": 0.9, "track_count": 12,
+    "font_weight": "Normal",           // Normal|Medium|Bold|SemiBold|Light
+    "shadow_enabled": true, "shadow_opacity": 0.6, "shadow_offset": 2,
+    "position_priority": "Top",        // Top|Center|Bottom — track fill order
+    "density": "Medium",               // Low=sparse|Medium|High=dense
+    "hover_hide_enabled": false,       // Mouse hover → hide danmaku
+    "background_enabled": false,       // Enable danmaku background
+    "background_color": "#000000",     // Background color (hex #RRGGBB)
+    "background_opacity": 0.3,         // Background opacity 0-1
+    "background_radius": 4.0           // Background corner radius (px)
+  },
+  "super_chat": {
+    "font_size": 40, "duration_ms": 15000,
+    "alignment": "Left",               // Left|Center|Right — SC text position
+    "background_enabled": true,        // Enable SC background
+    "background_color": "#000000",     // Background color (hex #RRGGBB)
+    "background_opacity": 0.3,         // Background opacity 0-1
+    "background_radius": 6.0           // Background corner radius (px)
+  }
+}
+```
+
+Config is resolved by walking up from exe dir. Both Python (`py_overlay/config.py`) and C# (`Config.cs`) load from same `config.json`.
+C# saves back via `Config.Save()` — fields like `sessdata` are persisted from launcher UI.
+
+## IPC Protocol (Named Pipe, `\n` delimited JSON)
+
+```json
 {"type": "danmaku", "uid": int, "uname": str, "msg": str, "color": int, "font_size": int, "timestamp": int}
-# Super Chat message
 {"type": "super_chat", "price": int, "uname": str, "message": str, "color": int}
 ```
 
-**Overlay.exe startup**:
-- Normal mode: `MainForm` — config editor + start/stop buttons + system tray
-- `--overlay` flag: direct `OverlayForm` using existing `config.json`
+## Key Files
 
-**User flow**:
-1. MainForm launcher: configure room ID, SESSDATA, danmaku params
-2. Click "全部启动" → SaveConfig() → StartBackend() (Python process) → ShowOverlay() (OverlayForm) → MainForm hides to tray
-3. Escape in overlay → closes OverlayForm, restores MainForm
-4. "停止后端" → Kill Python process tree
-5. Close MainForm → kill backend + close overlay + exit
+| File | Role |
+|------|------|
+| `App.xaml.cs` | Entry: `--overlay` → OverlayWindow, else → MainWindow. Crash log hooks (DispatcherUnhandledException, TaskScheduler) |
+| `OverlayWindow.xaml/.cs` | Transparent fullscreen, `AllowsTransparency=True`, `SetWindowDisplayAffinity` anti-capture, `GetCursorPos` hover, `CompositionTarget.Rendering` game loop |
+| `DanmakuRenderer.cs` | `DrawingVisual`+`VisualCollection`. Opacity via `visual.Opacity` per-frame (not baked into color). Object pooling |
+| `DanmakuEngine.cs` | Track assignment (`GetTrackScanOrder` density-aware), SC zone, `CheckHover()`. Thread-safe via `lock` |
+| `DanmakuItem.cs` | Display state: X/Y/TextWidth/Opacity/IsHovered/IsSC/LifetimeMs |
+| `PipeClient.cs` | `NamedPipeClientStream`, auto-reconnect 2s, `\n` framed JSON parsing, async continuous read loop |
+| `ProcessManager.cs` | Python lifecycle, venv/uv auto-detect, generation counter race fix (Interlocked.CompareExchange guard) |
+| `Config.cs` | `RoomEntry` class, `Rooms` list, auto-migration (legacy room_id → rooms[0]), walks dir tree to find config.json |
+| `MainWindow.xaml/.cs` | 6-tab launcher (基本设置/房间/弹幕/醒目留言/日志/关于), room CRUD, tray icon, WPF-UI resources only in MainWindow |
+| `py_overlay/handler.py` | `OverlayHandler(_on_danmaku, _on_super_chat)` — blivedm events → JSON pipe writes |
+| `py_overlay/main.py` | `PipeWriter` + Named Pipe server, blivedm client lifecycle, pipe watchdog reconnects |
+| `py_overlay/fetch_room.py` | Standalone script: fetch room name/title/status via API, used by launcher auto-fill |
+| `config.json` | Shared config (repo root), loaded by both Python and C# |
 
-## Key C# Overlay Details
+## Key WPF Details
 
-### MainForm.cs (launcher, ~740 lines)
+- **WPF-UI 4.3.0** (lepoco): Resource dictionaries in `MainWindow.Resources` **only** — NOT at Application level, to avoid leaking styles into `OverlayWindow`
+- Type aliases needed due to WPF-UI bringing `System.Drawing`: `using Color = System.Windows.Media.Color; Brush Brushes Point FontFamily Application` — same pattern for all
+- `ControlAppearance` valid values: Primary, Secondary, Info, Dark, Light, Danger, Success, Caution, Transparent
+- `SymbolIcon` uses markup extension: `Icon="{ui:SymbolIcon Play24}"`
+- **Anti-capture**: `SetWindowDisplayAffinity(hwnd, WDA_EXCLUDEFROMCAPTURE)` — prevents overlay from appearing in screenshots/screen recordings
+- **Click-through**: `WS_EX_TRANSPARENT | WS_EX_TOOLWINDOW | WS_EX_NOACTIVATE` window styles so mouse events pass through to windows beneath
+- **Render loop**: `CompositionTarget.Rendering` event (fires per VSYNC) drives `engine.Update()` → `renderer.Sync()` — no separate timer
+- **Hover detection**: `GetCursorPos(user32.dll P/Invoke)` works because the window is transparent (NOT `IsHitTestVisible="True"` + hit-test region trick — actual Win32 click-through)
 
-- TabControl with 4 tabs: 基本设置 (room/pipe/SESSDATA/display/python path), 弹幕设置 (font/speed/opacity/tracks), 醒目留言 (font/duration), 关于
-- Status panel: ● green/red indicators for backend + overlay, toggle buttons
-- Process management: `System.Diagnostics.Process` for Python, `Kill(entireProcessTree: true)`
-- Overlay management: `OverlayForm` created/destroyed per show — always fresh with latest config
-- Window minimize → system tray (NotifyIcon with context menu)
-- `OnFormClosing` cleans up: kill backend, close overlay, dispose tray
-- Project root derived from `config.json` location (`_configPath`), not `Application.ExecutablePath`
+## Python Details
 
-### DanmakuEngine.cs
+- `py_overlay/main.py`: `sys.path.insert(0, ...)` adds repo root so `blivedm` (vendored) is importable. `init_room()` fetches `room_uname`/`title`/`live_status` etc alongside room_id/uid. Creates Named Pipe **server** (opposite of typical client — Python is server, C# is client)
+- `py_overlay/handler.py`: `_send()` = `json.dumps + "\n"` → pipe. Overrides `_on_danmaku`, `_on_super_chat`. `_on_heartbeat` and `_on_gift` stubs exist but are unused
+- `py_overlay/config.py`: `load_config()` reads `../config.json` relative to py_overlay/
+- `py_overlay/fetch_room.py`: Standalone script. Uses `blivedm.BLiveClient.init_room()` + fallback `live_user/v1/Master/info` API. Returns JSON to stdout — called by launcher when user clicks "获取主播名"
+- **Pipe server vs client**: Python creates the Named Pipe with `CreateNamedPipe` + `ConnectNamedPipe` (server), C# connects with `NamedPipeClientStream` (client). Python waits for C# to connect before starting blivedm. On C# crash/restart, Python's `pipe_watchdog` re-creates the pipe every 1s
+- **PIPE_NOWAIT note**: Intentionally using default `PIPE_WAIT` mode to avoid `ERROR_NO_DATA` race on connect (see comment in `main.py:113`)
 
-- `AssignTrack()`: top→bottom track scan. Track height = `FontSize + 6px`. Picks first track where rightmost existing text edge leaves `entryWidth × 1.2` free space. Fallback: track with most free space.
-- `MeasureTextWidth` delegate: set by OverlayForm to DirectWrite measurement (accurate). Fallback = `text.Length * fontSize * 0.55`
-- `Update()`: moves danmaku leftward by `Speed * dt`, fades at edges; SC items fade in last 2s of lifetime
-- Thread safety: `lock (_lock)` on all item access (engine called from timer thread, pipe from pipe thread)
+## Vendored blivedm (`blivedm/`)
 
-### DanmakuRenderer.cs
+Third-party library [xfgryujk/blivedm](https://github.com/xfgryujk/blivedm), vendored at repo root. Uses `aiohttp` for WebSocket. Supports `SESSDATA` auth. `pyproject.toml` is the library's build config (pdm-backend). Not to be confused with application code in `py_overlay/`.
 
-- Vortice.Direct2D1 + DirectWrite: creates `ID2D1HwndRenderTarget` with `Premultiplied` alpha, transparent clear
-- Text: Microsoft YaHei UI, shadow (offset 2px), SC gets semi-transparent dark background
-- `ColorFromInt()`: minimum brightness clamp (lum < 0.3 → raised to 0.3)
-- `MeasureText()`: `CreateTextLayout` → `layout.Metrics.Width`
+## Known Issues
 
-### OverlayForm.cs
+- **WinUI overlay transparency**: Unresolved white background (DirectComposition). Abandoned.
+- **Thread safety**: Engine+Renderer called from both `CompositionTarget.Rendering` (UI thread) and pipe callback (background thread dispatched to UI). `lock` on engine items, renderer accessed only on UI thread.
+  - `MeasureTextWidth` delegate calls `DanmakuRenderer.MeasureText()` → `FormattedText`, which is **not** thread-safe. All pipe messages must dispatch to UI thread via `Dispatcher.InvokeAsync()` before calling `engine.HandleMessage()`.
+- **Per-danmaku font weight**: Not supported — would need IPC protocol change + DanmakuItem field.
+- **IPC protocol lacks type discriminator for unknown messages**: `HandleMessage` silently ignores types it doesn't recognize — add logging if debugging missing messages.
+- **Density × TrackCount interaction**: Low density with high track count still fills top-to-bottom; it controls spacing between items on same track, not total tracks used.
 
-- Extended style: `WS_EX_LAYERED | WS_EX_TRANSPARENT | WS_EX_TOPMOST | WS_EX_NOACTIVATE`
-- 60fps timer: `Update()` + `Invalidate()`
-- Suppressed `WM_ERASEBKGND` + empty `OnPaintBackground` to prevent flicker
-- Not clickable (WS_EX_TRANSPARENT) — mouse passes through to windows below
+## Debugging
 
-### PipeClient.cs
-
-- `NamedPipeClientStream`, auto-reconnect every 2s on disconnect
-- Framing: `\n`-delimited JSON lines, buffers partial lines in `StringBuilder`
-- Events: `OnMessage(JsonElement)`, `OnError(string)`, `OnConnected`, `OnDisconnected`
-
-### Config.cs
-
-- `[JsonPropertyName("snake_case")]` on all properties — shared format with Python-side `config.json`
-- `ResolveConfigPath()`: walks up from exe dir looking for `config.json`
-- `ConfigPath` property tracks where it was loaded from (used for Save + project root resolution)
-
-## Key Python Overlay Details
-
-### main.py
-
-1. Creates Named Pipe server (win32pipe.CreateNamedPipe, blocking ConnectNamedPipe in executor)
-2. Waits for C# overlay to connect
-3. Creates BLiveClient with optional SESSDATA auth
-4. Attaches OverlayHandler → streams events to pipe
-
-### handler.py
-
-- Subclasses `blivedm.BaseHandler`, overrides `_on_danmaku` and `_on_super_chat`
-- `_send()`: `json.dumps(ensure_ascii=False) + "\n"` → pipe
-- Gift/guard/heartbeat events: ignored (no-op handlers)
-
-### config.py
-
-- `DEFAULT_CONFIG` dict matches C# Config.cs defaults exactly
-- `load_config()` reads `../config.json` relative to `py_overlay/` directory
-
-## blivedm Protocol Notes (Python library)
-
-### Protocol Quirks
-- **Heartbeat Reply**: `Operation.HEARTBEAT_REPLY`. First 4 bytes = popularity (big-endian). `pack_len` does NOT include client's original heartbeat body (B站 bug). Library synthesizes fake `_HEARTBEAT` command.
-- **Multi-packet frames**: `SEND_MSG_REPLY`/`AUTH_REPLY` batch multiple packets. Parser loops `data[offset: offset+header.pack_len]`.
-- **Brotli decompression**: `run_in_executor` to avoid blocking.
-- **Heartbeat timer**: `loop.call_later()`, not `asyncio.sleep` — avoids drift.
-
-### Client Init (BLiveClient.init_room)
-4 discovery calls with graceful degradation:
-1. `_init_uid()` → `/x/web-interface/nav`, fallback uid=0
-2. `_init_buvid()` → `bilibili.com/`, acquire buvid3 cookie
-3. `_init_room_id_and_owner()` → `/room/v1/Room/get_info`, fallback short ID + owner_uid=0
-4. `_init_host_server()` → `/xlive/web-room/v1/index/getDanmuInfo` (WBI-signed), fallback `broadcastlv.chat.bilibili.com`
-
-### WBI Signing
-- Per-session `_WbiSigner` in `WeakKeyDictionary` (auto-GC'd)
-- Key refresh: 11h 59m 30s TTL
-- `-352` error → reset cached key
-- Algorithm: img_key + sub_key → shuffle via index table → MD5(urlencode(sorted(params)) + key)
-
-### Handler System
-- `BaseHandler._CMD_CALLBACK_DICT`: B站 cmd string → callback. Subclass must copy: `_CMD_CALLBACK_DICT = BaseHandler._CMD_CALLBACK_DICT.copy()`
-- Unknown cmd dedup: `logged_unknown_cmds` set, each unknown cmd logged once per process lifetime
-- Handler runs synchronously in network coroutine — blocking it blocks the entire WebSocket receive loop. CPU-heavy work → thread pool, IO-heavy → `create_task`
-
-### Client Lifecycle
-```
-start() → join() (blocks until stop) → stop_and_close()
-```
-Always call `stop_and_close()` in `finally`. Multi-client: `asyncio.gather(*[client.join() for client in clients])`.
-
-### Message Models
-- `DanmakuMessage.from_command()`: parses JSON array `info[0..16]`, not dict keys — brittle to schema changes
-- `InteractWordV2`: base64 protobuf in `data['pb']`, decoded via `pure-protobuf` in `pb.py`
-- All models have `@classmethod from_command(data: dict)`
-
-## Dependencies
-
-**C# (overlay-csharp/Overlay/Overlay.csproj)**:
-- `Vortice.Direct2D1` 2.4.2 — Direct2D/DirectWrite .NET bindings
-- `System.Text.Json` 8.0.5 — JSON serialization
-- Target: `net8.0-windows`, WinForms enabled
-
-**Python (pyproject.toml)**:
-- `aiohttp~=3.9.0` — async HTTP/WebSocket
-- `Brotli~=1.1.0` — decompress bilibili brotli frames
-- `pure-protobuf~=3.1.2` — Protobuf decode (InteractWordV2)
-- `pywin32==310` — Windows Named Pipe (CreateNamedPipe, WriteFile)
-- `yarl~=1.9.3` — URL handling
-- Python 3.8–3.13, PDM build system
+- **Crash logs**: Written to `WpfOverlay_crash.log` in CWD (App.UnhandledException, DispatcherUnhandledException, TaskScheduler.UnobservedTaskException)
+- **Overlay debug log**: `overlay_debug.log` in CWD — verbose trace of overlay init steps and pipe events. Toggle by commenting out `LogDebug()` in `OverlayWindow.xaml.cs`
+- **Python backend logs**: Written to stdout/stderr, captured by `ProcessManager` and displayed in launcher Log tab
+- **WinUIOverlay crash log**: `WinUIOverlay_crash.log` (from abandoned WinUI branch)
+- **Overlay-only mode**: `dotnet run -- --overlay` starts overlay without launcher — useful when Python backend is started manually
+- **Test room**: Room `27484357` (Nile Red — often streams) or `4350043` (一米的坤儿) for testing without SESSDATA

@@ -187,6 +187,22 @@ class BLiveClient(ws_base.WebSocketClientBase):
         self._host_server_token: Optional[str] = None
         """连接弹幕服务器用的token"""
 
+        # init_room 额外获取的房间信息
+        self._room_uname: str = ''
+        """主播昵称"""
+        self._room_title: str = ''
+        """直播标题"""
+        self._live_status: int = 0
+        """直播状态 0=未开播 1=直播中 2=轮播"""
+        self._live_time: str = ''
+        """开播时间 yyyy-MM-dd HH:mm:ss"""
+        self._online: int = 0
+        """在线人数"""
+        self._area_name: str = ''
+        """分区名"""
+        self._short_id: int = 0
+        """短号"""
+
     @property
     def tmp_room_id(self) -> int:
         """
@@ -207,6 +223,41 @@ class BLiveClient(ws_base.WebSocketClientBase):
         当前登录的用户ID，未登录则为0，调用init_room后初始化
         """
         return self._uid
+
+    @property
+    def room_uname(self) -> str:
+        """主播昵称，init_room后可用"""
+        return self._room_uname
+
+    @property
+    def room_title(self) -> str:
+        """直播标题，init_room后可用"""
+        return self._room_title
+
+    @property
+    def live_status(self) -> int:
+        """直播状态 0=未开播 1=直播中 2=轮播，init_room后可用"""
+        return self._live_status
+
+    @property
+    def live_time(self) -> str:
+        """开播时间 yyyy-MM-dd HH:mm:ss，未开播时为空字符串，init_room后可用"""
+        return self._live_time
+
+    @property
+    def online(self) -> int:
+        """在线人数，init_room后可用"""
+        return self._online
+
+    @property
+    def area_name(self) -> str:
+        """直播分区名，init_room后可用"""
+        return self._area_name
+
+    @property
+    def short_id(self) -> int:
+        """短号，0表示无短号，init_room后可用"""
+        return self._short_id
 
     async def init_room(self):
         """
@@ -323,6 +374,13 @@ class BLiveClient(ws_base.WebSocketClientBase):
     def _parse_room_init(self, data):
         self._room_id = data['room_id']
         self._room_owner_uid = data['uid']
+        self._room_uname = data.get('uname', '')
+        self._room_title = data.get('title', '')
+        self._live_status = data.get('live_status', 0)
+        self._live_time = data.get('live_time', '')
+        self._online = data.get('online', 0)
+        self._area_name = data.get('area_name', '')
+        self._short_id = data.get('short_id', 0)
         return True
 
     async def _init_host_server(self):

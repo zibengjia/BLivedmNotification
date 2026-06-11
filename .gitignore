@@ -1,2 +1,31 @@
-!/.venv/
-!/.idea/
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+
+# PyInstaller build artifacts
+build/
+dist_pyinstaller/
+*.spec.bak
+
+# Distribution output
+dist/
+
+# C# build outputs
+bin/
+obj/
+
+# Debug logs
+*_debug.log
+*_crash.log
+overlay_debug.log
+WpfOverlay_crash.log
+
+# Config (contains sensitive sessdata)
+config.json
+
+# IDE
+.idea/
+.vscode/
+*.swp
