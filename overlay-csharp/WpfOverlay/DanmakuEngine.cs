@@ -341,6 +341,4 @@ public class DanmakuEngine
     private static long GetLong(JsonElement el, string key, long def)
         => el.TryGetProperty(key, out var p) ? p.GetInt64() : def;
 
-    private static double GetDouble(JsonElement el, string key, double def)
-        => el.TryGetProperty(key, out var p) ? p.GetDouble() : def;
 }

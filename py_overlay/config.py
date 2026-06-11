@@ -20,8 +20,20 @@ DEFAULT_CONFIG = {
 }
 
 
-def _is_frozen():
+def is_frozen():
+    """True when running as a PyInstaller frozen exe."""
     return getattr(sys, 'frozen', False)
+
+
+def get_app_root():
+    """
+    Resolve the application root directory.
+    - Frozen exe: directory containing the exe (where config.json lives)
+    - Source mode: project root (parent of py_overlay/)
+    """
+    if is_frozen():
+        return os.path.dirname(sys.executable)
+    return os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
 def _default_config_path() -> str:
@@ -30,7 +42,7 @@ def _default_config_path() -> str:
     - Frozen exe: next to the exe file
     - Source mode: relative to this file (../config.json)
     """
-    if _is_frozen():
+    if is_frozen():
         return os.path.join(os.path.dirname(sys.executable), "config.json")
     return os.path.join(os.path.dirname(__file__), "..", "config.json")
 

@@ -10,12 +10,17 @@
 ## 特性
 
 - **透明桌面叠加层** — 弹幕直接渲染在屏幕最上层，透明背景、鼠标穿透，不影响日常操作
-- **多房间管理** — 同时管理多个直播间，备注自动获取主播名，独立 Tab 切换
-- **弹幕高度自定义** — 字体大小 / 速度 / 透明度 / 轨道数 / 字重 / 阴影 / 密度 / 位置优先级，全部可调
+- **多房间管理** — 同时管理多个直播间，备注自动获取主播名，独立 Tab 切换，列表高度可拖拽调整
+- **直播状态检测** — 自动轮询各房间直播状态（直播中 / 轮播 / 未开播），每 1 分钟刷新
+- **弹幕高度自定义** — 字体 / 字号 / 速度 / 透明度 / 轨道数 / 字重 / 阴影 / 密度 / 位置优先级，全部可调
+- **弹幕背景** — 可配置半透明圆角矩形背景（颜色 / 不透明度 / 圆角），提高弹幕可读性
 - **鼠标悬停隐藏** — 光标经过弹幕区域时自动淡出，避免遮挡
 - **防截屏捕获** — 基于 `SetWindowDisplayAffinity`，Overlay 不会出现在截图和录屏中（可选开启）
-- **WPF-UI 启动器** — 基于 [WPF-UI 4.3.0](https://github.com/lepoco/wpfui) 的现代 Fluent 风格管理界面
-- **醒目留言 (Super Chat)** — 独立样式高亮展示 SC 消息
+- **醒目留言 (Super Chat)** — 独立样式高亮展示 SC 消息，支持对齐方式设置
+- **SC 智能样式** — 根据 B 站 API 提供的价格档位自动设置持续时间和渐变背景色（¥50 蓝色、¥100 浅蓝、¥500 粉色、¥1000 红色、¥2000 深红）
+- **SC 背景自定义** — 可配置 SC 背景颜色 / 不透明度 / 圆角，支持 API 颜色自动渐变
+- **WPF-UI 启动器** — 基于 [WPF-UI 4.3.0](https://github.com/lepoco/wpfui) 的现代 Fluent 风格管理界面，6 标签页
+- **系统托盘** — 最小化到托盘，右键菜单快捷操作
 
 ## 架构
 
@@ -46,7 +51,7 @@
 ### 1. 克隆项目
 
 ```bash
-git clone https://github.com/your-username/BLivedmNotification.git
+git clone https://github.com/zibengjia/BLivedmNotification.git
 cd BLivedmNotification
 ```
 
@@ -85,11 +90,20 @@ pdm install
     "shadow_offset": 2,
     "position_priority": "Top",    // 轨道填充方向：Top | Center | Bottom
     "density": "Medium",           // 弹幕密度：Low | Medium | High
-    "hover_hide_enabled": false    // 鼠标悬停时隐藏弹幕
+    "hover_hide_enabled": false,   // 鼠标悬停时隐藏弹幕
+    "background_enabled": false,   // 启用弹幕背景
+    "background_color": "#000000", // 背景颜色
+    "background_opacity": 0.3,     // 背景不透明度 0-1
+    "background_radius": 4.0       // 背景圆角（px）
   },
   "super_chat": {
     "font_size": 40,               // SC 字号
-    "duration_ms": 15000           // SC 显示时长（毫秒）
+    "duration_ms": 15000,          // SC 默认显示时长（毫秒），实际由 B 站 API 按价格档位覆盖
+    "alignment": "Left",           // SC 对齐方式：Left | Center | Right
+    "background_enabled": true,    // 启用 SC 背景
+    "background_color": "#000000", // SC 背景颜色（API 有颜色时自动覆盖）
+    "background_opacity": 0.3,     // SC 背景不透明度
+    "background_radius": 6.0       // SC 背景圆角（px）
   }
 }
 ```
@@ -129,20 +143,21 @@ BLivedmNotification/
 │   │   ├── App.xaml.cs         # 入口，区分启动器 / Overlay 模式
 │   │   ├── MainWindow.xaml/.cs # 启动器 UI（6 标签页）
 │   │   ├── OverlayWindow.xaml/.cs  # 透明全屏叠加层
-│   │   ├── DanmakuEngine.cs    # 弹幕引擎（轨道分配、碰撞、线程安全）
-│   │   ├── DanmakuRenderer.cs  # 弹幕渲染器（DrawingVisual + 对象池）
-│   │   ├── DanmakuItem.cs      # 弹幕数据模型
+│   │   ├── DanmakuEngine.cs    # 弹幕引擎（轨道分配、碰撞、SC 区域、线程安全）
+│   │   ├── DanmakuRenderer.cs  # 弹幕渲染器（DrawingVisual + 对象池 + SC 渐变背景）
+│   │   ├── DanmakuItem.cs      # 弹幕数据模型（含 SC 颜色/价格字段）
 │   │   ├── PipeClient.cs       # Named Pipe 客户端（自动重连）
-│   │   ├── ProcessManager.cs   # Python 后端进程管理
-│   │   └── Config.cs           # 配置读写
+│   │   ├── ProcessManager.cs   # Python 后端进程管理（venv/uv 自动检测）
+│   │   └── Config.cs           # 配置读写（含弹幕/SC 背景设置）
 │   ├── Overlay/                # WinForms 版本（legacy，已弃用）
 │   └── WinUIOverlay/           # WinUI 3 版本（abandoned，透明度未解决）
 ├── py_overlay/
 │   ├── main.py                 # Python 后端入口（Pipe Server + blivedm 客户端）
-│   ├── handler.py              # 弹幕消息处理器
+│   ├── handler.py              # 弹幕消息处理器（传递 SC 颜色/时长）
 │   ├── config.py               # 配置加载
 │   └── fetch_room.py           # 直播间信息查询脚本
-├── config.json                 # 共享配置文件
+├── config.example.json         # 配置示例
+├── config.json                 # 共享配置文件（gitignore）
 └── sample.py                   # blivedm 示例脚本
 ```
 
@@ -152,8 +167,10 @@ BLivedmNotification/
 
 ```json
 {"type": "danmaku", "uid": 12345, "uname": "用户名", "msg": "弹幕内容", "color": 16777215, "font_size": 25, "timestamp": 1700000000}
-{"type": "super_chat", "price": 30, "uname": "用户名", "message": "SC 内容", "color": 16777215}
+{"type": "super_chat", "price": 30, "uname": "用户名", "message": "SC 内容", "color": 16777215, "time": 60, "background_color": "#2A60B2", "background_bottom_color": "#1A3A6A", "background_price_color": "#2A60B2"}
 ```
+
+SC 消息额外携带 B 站 API 提供的 `time`（持续秒数）、`background_color` / `background_bottom_color`（渐变背景色），由 C# 端自动应用为对应价格档位的样式。
 
 ## 技术栈
 
@@ -164,6 +181,7 @@ BLivedmNotification/
 | 前端框架 | .NET 8 / WPF |
 | UI 组件库 | [WPF-UI 4.3.0](https://github.com/lepoco/wpfui) (Fluent Design) |
 | 渲染 | `DrawingVisual` + `FormattedText` + `CompositionTarget.Rendering` (VSYNC 同步) |
+| SC 背景 | `LinearGradientBrush` 垂直渐变（API 颜色） |
 | IPC | Named Pipe，JSON Lines 协议 |
 
 ## 调试
