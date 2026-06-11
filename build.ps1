@@ -128,7 +128,7 @@ if (-not $SkipDotnet) {
         -c $Configuration `
         -r $Runtime `
         --self-contained true `
-        -p:PublishSingleFile=false `
+        -p:PublishSingleFile=true `
         -p:IncludeNativeLibrariesForSelfExtract=true `
         -p:DebugType=None `
         -p:DebugSymbols=false
@@ -177,13 +177,8 @@ if (-not $SkipPython) {
     }
 }
 
-# Copy config files
-$configJson = Join-Path $ProjectRoot "config.json"
+# Copy config example (user creates config.json via launcher UI on first run)
 $configExample = Join-Path $ProjectRoot "config.example.json"
-if (Test-Path $configJson) {
-    Copy-Item $configJson $distOutput -Force
-    Write-Host "  Copied config.json"
-}
 if (Test-Path $configExample) {
     Copy-Item $configExample $distOutput -Force
     Write-Host "  Copied config.example.json"
